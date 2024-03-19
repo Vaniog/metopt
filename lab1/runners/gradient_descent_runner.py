@@ -13,7 +13,7 @@ class GradientDescendRunner(AbstractRunner):
         x, y = point
         z = self.p.f(*point)
         dx, dy = _grad = self.grad(self.p.f, point, ak)
-        res = Step(_grad, ak, point, z)
+        res = Step(point, z)
         if self._log:
             print(res)
         return res, (x - ak * dx, y - ak * dy)  # возвращаем текущий шаг и координаты для следующего

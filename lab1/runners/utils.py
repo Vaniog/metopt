@@ -3,6 +3,7 @@ import dataclasses
 import math
 import typing as tp
 from dataclasses import dataclass
+from functools import wraps
 from timeit import default_timer as timer
 
 import numpy as np
@@ -17,8 +18,6 @@ class Step:
     Класс, отвечающий за хранение отдельной итерации
 
     """
-    grad: Vector2D
-    ak: float
     point: Vector2D
     z: float
 
@@ -122,12 +121,25 @@ class Coef:
 
 
 @dataclass
-class Problem:
+class Oracle:
     """
     Тут храним все исходные данные, в том числе искомую точку, чтобы сравнивать полученный результат с ней
     """
     f: tp.Callable[[float, float], float]
     target: Vector2D
+    steps: list[Step] = dataclasses.field(default_factory=list)
+
+    def dec(self, f: tp.Callable):
+        @wraps(f)
+        def inner(x: float, y: float) -> float:
+            r = f(x, y)
+            self.steps.append(Step((x, y), r))
+            return r
+
+        return inner
+
+    def __post_init__(self):
+        self.f = self.dec(self.f)
 
 
 @dataclass
@@ -150,7 +162,7 @@ class AbstractRunner(abc.ABC):
     Класс, используемый для запуска программы.
     Хранит в себе все исходные данные и позволяет задавать параметры программы
     """
-    p: Problem
+    p: Oracle
 
     start: Vector2D
     a: tp.Generator
@@ -162,7 +174,7 @@ class AbstractRunner(abc.ABC):
     def _step(self, point: Vector2D, ak: float) -> tp.Tuple[Step, Vector2D]:
         raise NotImplementedError()
 
-    def _run(self, start: Vector2D, a: tp.Generator, exit_condition: ExitCondition.tp) -> tp.List[Step]:
+    def _run(self, start: Vector2D, a: tp.Generator, exit_condition: ExitCondition.tp):
         it, next_point = self._step(start, next(a))
         steps = [it]  # тут храним все шаги программы
         while True:
@@ -170,12 +182,14 @@ class AbstractRunner(abc.ABC):
             steps.append(it)
             if exit_condition(steps[-2], steps[-1]):  # На основании 2х последних шагов решаем, пора ли заканчивать
                 break
-        return steps
 
     def run(self) -> tp.Tuple[Result, float]:
         st = timer()
-        res = Result(self._run(self.start, self.a, self.exit_condition))
+        self._run(self.start, self.a, self.exit_condition)
         end = timer()
+
+        res = Result(self.p.steps)
+        self.p.steps = []
         return res, end - st
 
     def experiment(self, log=False, points=None, plt_cfg: PlotConfig = None):

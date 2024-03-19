@@ -34,5 +34,5 @@ class CoordinateDescendRunner(AbstractRunner):
                 self.direction.rotate()
                 continue
 
-            return Step((0, 0), ak, next_point, self.p.f(*next_point)), next_point
-        return Step((0, 0), ak, point, self.p.f(*point)), point
+            return Step(next_point, self.p.f(*next_point)), next_point
+        return Step(point, self.p.f(*point)), point

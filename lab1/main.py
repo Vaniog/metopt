@@ -10,7 +10,7 @@ def main():
         # return x ** 2 + y ** 2
 
     TARGET = (4 / 3, 20 / 63)
-    PROBLEM = Problem(f, TARGET)
+    PROBLEM = Oracle(f, TARGET)
     print(f(*TARGET))
     runner = CoordinateDescendRunner(PROBLEM, (2, 1), Coef.CONST(0.0001),
                                    ExitCondition.NORM(Metric.EUCLID, 0.00001))

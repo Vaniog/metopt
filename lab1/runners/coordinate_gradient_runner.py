@@ -38,7 +38,7 @@ class CoordinateGradientRunner(AbstractRunner):
         x, y = point
         z = self.p.f(*point)
         dx, dy = _grad = GradientDescendRunner.grad(self.p.f, point, ak)
-        res = Step(_grad, ak, point, z)
+        res = Step(point, z)
         if self._log:
             print(res)
 
