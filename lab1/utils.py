@@ -210,6 +210,7 @@ class AbstractRunner(abc.ABC):
         self.plot(ax, plt_cfg)
         fig.show()
 
+
     def plot(self, ax: plt.Axes, cfg: PlotConfig):
         x = np.linspace(cfg.linspace_start, cfg.linspace_stop, cfg.linspace_num)
         y = np.linspace(cfg.linspace_start, cfg.linspace_stop, cfg.linspace_num)
