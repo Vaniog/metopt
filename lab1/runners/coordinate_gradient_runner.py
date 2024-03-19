@@ -8,6 +8,7 @@ def search_up(f: tp.Callable[[float], float]):
     eps = 0.1
     f0 = f(0)
     while f(eps) < f0:
+        f0 = f(eps)
         eps *= 2
     return eps
 
