@@ -210,7 +210,6 @@ class AbstractRunner(abc.ABC):
         self.plot(ax, plt_cfg)
         fig.show()
 
-
     def plot(self, ax: plt.Axes, cfg: PlotConfig):
         x = np.linspace(cfg.linspace_start, cfg.linspace_stop, cfg.linspace_num)
         y = np.linspace(cfg.linspace_start, cfg.linspace_stop, cfg.linspace_num)
@@ -222,39 +221,3 @@ class AbstractRunner(abc.ABC):
         ax.set_xlabel('x')
         ax.set_ylabel('y')
         ax.set_zlabel('z')
-
-
-class GradientDescendRunner(AbstractRunner):
-    @staticmethod
-    def grad(f: tp.Callable[[float, float], float], p: Vector2D, delta: float) -> Vector2D:
-        dfx = f(p[0] + delta, p[1]) - f(*p)  # изменение f по x
-        dfy = f(p[0], p[1] + delta) - f(*p)  # изменение f по y
-        # градиент, составленный из частных производных
-        return dfx / delta, dfy / delta
-
-    def _step(self, point: Vector2D, ak: float) -> tp.Tuple[Step, Vector2D]:
-        x, y = point
-        z = self.p.f(*point)
-        dx, dy = _grad = self.grad(self.p.f, point, ak)
-        res = Step(_grad, ak, point, z)
-        if self._log:
-            print(res)
-        return res, (x - ak * dx, y - ak * dy)  # возвращаем текущий шаг и координаты для следующего
-
-
-def main():
-    def f(x: float, y: float) -> float:
-        # return x ** 3 * y ** 5 * (4 - x - 7 * y)
-        # return scipy.optimize.rosen((x, y))
-        return x ** 2 + y ** 2
-
-    TARGET = (4 / 3, 20 / 63)
-    PROBLEM = Problem(f, TARGET)
-    print(f(*TARGET))
-    runner = GradientDescendRunner(PROBLEM, (2, 1), Coef.CONST(0.0001),
-                                   ExitCondition.NORM(Metric.EUCLID, 0.0001))
-    runner.experiment(False, 25, plt_cfg=PlotConfig(-3, 3, func_num=100, dpi=500))
-
-
-if __name__ == '__main__':
-    main()
