@@ -3,6 +3,7 @@ import math
 import typing as tp
 from timeit import default_timer as timer
 from dataclasses import dataclass
+import numpy as np
 
 Vector2D = tp.Tuple[float, float]
 
@@ -102,7 +103,6 @@ class Problem:
     Тут храним все исходные данные, в том числе искомую точку, чтобы сравнивать полученный результат с ней
     """
     f: tp.Callable[[float, float], float]
-    grad: tp.Callable[[float, float], Vector2D]
     target: Vector2D
 
 
@@ -147,10 +147,17 @@ class AbstractRunner(abc.ABC):
 
 
 class GradientDescendRunner(AbstractRunner):
+    @staticmethod
+    def grad(f: tp.Callable[[float, float], float], p: Vector2D, delta: float) -> Vector2D:
+        dfx = f(p[0] + delta, p[1]) - f(*p)  # изменение f по x
+        dfy = f(p[0], p[1] + delta) - f(*p)  # изменение f по y
+        # градиент, составленный из частных производных
+        return dfx / delta, dfy / delta
+
     def _step(self, point: Vector2D, ak: float) -> tp.Tuple[Step, Vector2D]:
         x, y = point
         z = self.p.f(*point)
-        dx, dy = _grad = self.p.grad(*point)
+        dx, dy = _grad = self.grad(self.p.f, point, ak)
         res = Step(_grad, ak, point, z)
         if self._log:
             print(res)
@@ -167,21 +174,17 @@ class GradientDescendRunner(AbstractRunner):
         return steps
 
 
-if __name__ == '__main__':
+def main():
     def f(x: float, y: float) -> float:
         return x ** 3 * y ** 5 * (4 - x - 7 * y)
 
-
-    def grad(x: float, y: float) -> Vector2D:
-        return (
-            -x ** 3 * y ** 5 + 3 * x ** 2 * (4 - x - 7 * y) * y ** 5,
-            5 * x ** 3 * (4 - x - 7 * y) * y ** 4 - 7 * x ** 3 * y ** 5
-        )
-
-
     TARGET = (4 / 3, 20 / 63)
-    PROBLEM = Problem(f, grad, TARGET)
+    PROBLEM = Problem(f, TARGET)
     print(f(*TARGET))
     runner = GradientDescendRunner(PROBLEM, (2, 1), Coef.CONST(0.0001),
                                    ExitCondition.NORM(Metric.EUCLID, 0.0001))
     runner.experiment(False, 25)
+
+
+if __name__ == '__main__':
+    main()
