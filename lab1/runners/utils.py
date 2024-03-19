@@ -52,7 +52,7 @@ class Result:
     def accuracy(self, target: Vector2D):
         return Metric.EUCLID(*self.steps[-1].point, *target)
 
-    def plot(self, ax: plt.Axes, cnt=15):
+    def plot(self, ax: plt.Axes, cnt=15, flat=False):
         xdata = []
         ydata = []
         zdata = []
@@ -61,8 +61,10 @@ class Result:
             xdata.append(step.point[0])
             ydata.append(step.point[1])
             zdata.append(step.z)
-
-        ax.scatter(xdata, ydata, zdata)
+        if flat:
+            ax.scatter(xdata, ydata)
+        else:
+            ax.scatter(xdata, ydata, zdata)
 
     def _steps(self, cnt: int):
         step = int(len(self.steps) / cnt) + 1
@@ -136,6 +138,7 @@ class PlotConfig:
     func_num: int = 150
     dpi: int = 1000
     steps: int = 10
+    level_lines: int = 15
 
     def copy(self, xs, ys):
         return PlotConfig(xs, ys, **dataclasses.asdict(self))
@@ -193,13 +196,15 @@ class AbstractRunner(abc.ABC):
             print(res.steps[len(res.steps) - 1].point)
 
         self.func_plot(plt_cfg)
+        self.level_curves(plt_cfg)
 
+        plt_cfg.linspace_start, plt_cfg.linspace_stop = res.calculate_scale(points)
         self.result_plot(plt_cfg, points, res)
+        self.res_level_curves(plt_cfg, points, res)
 
     def result_plot(self, plt_cfg, points, res):
         fig = plt.figure(dpi=plt_cfg.dpi)
         ax = plt.axes(projection='3d')
-        plt_cfg.linspace_start, plt_cfg.linspace_stop = res.calculate_scale(points)
         self.plot(ax, plt_cfg)
         res.plot(ax, points)
         fig.show()
@@ -210,11 +215,35 @@ class AbstractRunner(abc.ABC):
         self.plot(ax, plt_cfg)
         fig.show()
 
-    def plot(self, ax: plt.Axes, cfg: PlotConfig):
-        x = np.linspace(cfg.linspace_start, cfg.linspace_stop, cfg.linspace_num)
-        y = np.linspace(cfg.linspace_start, cfg.linspace_stop, cfg.linspace_num)
+    def level_curves(self, cfg: PlotConfig):
+        fig = plt.figure(dpi=cfg.dpi)
+        ax = plt.axes()
+        self._level_curves(ax, cfg)
+        fig.show()
 
-        X, Y = np.meshgrid(x, y)
+    def res_level_curves(self, cfg: PlotConfig, cnt: int, res: Result):
+        fig = plt.figure(dpi=cfg.dpi)
+        ax = plt.axes()
+        self._level_curves(ax, cfg)
+        res.plot(ax, cnt, flat=True)
+
+        fig.show()
+
+    def _level_curves(self, ax, cfg: PlotConfig):
+        X, Y = np.meshgrid(*self._linspace(cfg))
+        Z = self.p.f(X, Y)
+        ax.contour(X, Y, Z, levels=cfg.level_lines)
+
+    @staticmethod
+    def _linspace(cfg):
+        return (
+            np.linspace(cfg.linspace_start, cfg.linspace_stop, cfg.linspace_num),
+            np.linspace(cfg.linspace_start, cfg.linspace_stop, cfg.linspace_num)
+        )
+
+    def plot(self, ax: plt.Axes, cfg: PlotConfig):
+
+        X, Y = np.meshgrid(*self._linspace(cfg))
         Z = self.p.f(X, Y)
 
         ax.contour3D(X, Y, Z, cfg.func_num, cmap='binary')
