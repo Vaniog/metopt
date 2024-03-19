@@ -36,14 +36,14 @@ class CoordinateGradientRunner(AbstractRunner):
 
     def _step(self, point: Vector2D, ak: float) -> tp.Tuple[Step, Vector2D]:
         x, y = point
-        z = self.p.f(*point)
-        dx, dy = _grad = GradientDescendRunner.grad(self.p.f, point, ak)
+        z = self.o.f(*point)
+        dx, dy = _grad = GradientDescendRunner.grad(self.o.f, point, ak)
         res = Step(point, z)
         if self._log:
             print(res)
 
         def f_grad(t: float):
-            return self.p.f(x - t * dx, y - t * dy)
+            return self.o.f(x - t * dx, y - t * dy)
 
         if self.last_step is None:
             self.last_step = search_up(f_grad)

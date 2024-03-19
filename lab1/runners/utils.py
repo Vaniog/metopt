@@ -162,7 +162,7 @@ class AbstractRunner(abc.ABC):
     Класс, используемый для запуска программы.
     Хранит в себе все исходные данные и позволяет задавать параметры программы
     """
-    p: Oracle
+    o: Oracle
 
     start: Vector2D
     a: tp.Generator
@@ -188,8 +188,8 @@ class AbstractRunner(abc.ABC):
         self._run(self.start, self.a, self.exit_condition)
         end = timer()
 
-        res = Result(self.p.steps)
-        self.p.steps = []
+        res = Result(self.o.steps)
+        self.o.steps = []
         return res, end - st
 
     def experiment(self, log=False, points=None, plt_cfg: PlotConfig = None):
@@ -201,7 +201,7 @@ class AbstractRunner(abc.ABC):
         """
         self._log = log
         res, time = self.run()
-        acc = res.accuracy(self.p.target)
+        acc = res.accuracy(self.o.target)
         print(f"Точность: {acc:.8f}")  # расстояние между полученной и искомой точками
         print(f"Кол-во шагов: {len(res.steps)}")
         print(f"Время: {time:.4f} с")
@@ -245,7 +245,7 @@ class AbstractRunner(abc.ABC):
 
     def _level_curves(self, ax, cfg: PlotConfig):
         X, Y = np.meshgrid(*self._linspace(cfg))
-        Z = self.p.f(X, Y)
+        Z = self.o.f(X, Y)
         ax.contour(X, Y, Z, levels=cfg.level_lines)
 
     @staticmethod
@@ -256,9 +256,8 @@ class AbstractRunner(abc.ABC):
         )
 
     def plot(self, ax: plt.Axes, cfg: PlotConfig):
-
         X, Y = np.meshgrid(*self._linspace(cfg))
-        Z = self.p.f(X, Y)
+        Z = self.o.f(X, Y)
 
         ax.contour3D(X, Y, Z, cfg.func_num, cmap='binary')
         ax.set_xlabel('x')

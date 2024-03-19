@@ -11,8 +11,8 @@ class GradientDescendRunner(AbstractRunner):
 
     def _step(self, point: Vector2D, ak: float) -> tp.Tuple[Step, Vector2D]:
         x, y = point
-        z = self.p.f(*point)
-        dx, dy = _grad = self.grad(self.p.f, point, ak)
+        z = self.o.f(*point)
+        dx, dy = _grad = self.grad(self.o.f, point, ak)
         res = Step(point, z)
         if self._log:
             print(res)

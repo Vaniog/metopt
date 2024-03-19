@@ -28,11 +28,12 @@ class CoordinateDescendRunner(AbstractRunner):
             next_point: Vector2D = (point[0] + d[0] * ak, point[1] + d[1] * ak)
             if self._log:
                 print("point:", next_point)
-                print("f:", self.p.f(*next_point))
+                print("f:", self.o.f(*next_point))
 
-            if self.p.f(*next_point) > self.p.f(*point):
+            f_next_point = self.o.f(*next_point)
+            if f_next_point > self.o.f(*point):
                 self.direction.rotate()
                 continue
 
-            return Step(next_point, self.p.f(*next_point)), next_point
-        return Step(point, self.p.f(*point)), point
+            return Step(next_point, f_next_point), next_point
+        return Step(point, self.o.f(*point)), point
