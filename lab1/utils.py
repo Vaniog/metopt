@@ -144,6 +144,7 @@ class AbstractRunner(abc.ABC):
         print(f"Время: {time:.4f} с")
         if points:
             print(res.geogebra(points))
+            print(res.steps[len(res.steps) - 1].point)
 
 
 class GradientDescendRunner(AbstractRunner):
@@ -172,19 +173,3 @@ class GradientDescendRunner(AbstractRunner):
             if exit_condition(steps[-2], steps[-1]):  # На основании 2х последних шагов решаем, пора ли заканчивать
                 break
         return steps
-
-
-def main():
-    def f(x: float, y: float) -> float:
-        return x ** 3 * y ** 5 * (4 - x - 7 * y)
-
-    TARGET = (4 / 3, 20 / 63)
-    PROBLEM = Problem(f, TARGET)
-    print(f(*TARGET))
-    runner = GradientDescendRunner(PROBLEM, (2, 1), Coef.CONST(0.0001),
-                                   ExitCondition.NORM(Metric.EUCLID, 0.0001))
-    runner.experiment(False, 25)
-
-
-if __name__ == '__main__':
-    main()
