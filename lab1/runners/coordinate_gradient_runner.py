@@ -4,8 +4,17 @@ import typing as tp
 from .gradient_descent_runner import GradientDescendRunner
 
 
+def search_up(f: tp.Callable[[float], float]):
+    eps = 0.1
+    f0 = f(0)
+    while f(eps) < f0:
+        eps *= 2
+    return eps
+
+
 def trinary_search(f: tp.Callable[[float], float], x_max: float, iterations: int) -> float:
     lb = 0
+
     rb = x_max
     while iterations != 0:
         x1 = lb + (rb - lb) / 3
@@ -22,6 +31,8 @@ def trinary_search(f: tp.Callable[[float], float], x_max: float, iterations: int
 
 
 class CoordinateGradientRunner(AbstractRunner):
+    last_step = None
+
     def _step(self, point: Vector2D, ak: float) -> tp.Tuple[Step, Vector2D]:
         x, y = point
         z = self.p.f(*point)
@@ -33,6 +44,9 @@ class CoordinateGradientRunner(AbstractRunner):
         def f_grad(t: float):
             return self.p.f(x - t * dx, y - t * dy)
 
-        t = trinary_search(f_grad, ak * 1000, 10)
+        if self.last_step is None:
+            self.last_step = search_up(f_grad)
+        t = trinary_search(f_grad, self.last_step * 2, 10)
+        self.last_step = t
 
         return res, (x - t * dx, y - t * dy)  # возвращаем текущий шаг и координаты для следующего
