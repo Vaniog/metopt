@@ -43,10 +43,10 @@ class Result:
 
         :param cnt: кол-во точек на выходе
         """
-        
+
         step = int(len(self.steps) / cnt) + 1
         arr = self.steps[::step]
-        
+
         return "{" + ", ".join(map(lambda el: el.geogebra(), arr)) + "}"
 
     def accuracy(self, target: Vector2D):
@@ -156,8 +156,18 @@ class AbstractRunner(abc.ABC):
     _log: bool = False
 
     @abc.abstractmethod
-    def _run(self, start: Vector2D, a: tp.Generator, exit_condition: ExitCondition.tp) -> Result:
+    def _step(self, point: Vector2D, ak: float) -> tp.Tuple[Step, Vector2D]:
         raise NotImplementedError()
+
+    def _run(self, start: Vector2D, a: tp.Generator, exit_condition: ExitCondition.tp) -> tp.List[Step]:
+        it, next_point = self._step(start, next(a))
+        steps = [it]  # тут храним все шаги программы
+        while True:
+            it, next_point = self._step(next_point, next(a))  # шагаем
+            steps.append(it)
+            if exit_condition(steps[-2], steps[-1]):  # На основании 2х последних шагов решаем, пора ли заканчивать
+                break
+        return steps
 
     def run(self) -> tp.Tuple[Result, float]:
         st = timer()
@@ -229,16 +239,6 @@ class GradientDescendRunner(AbstractRunner):
         if self._log:
             print(res)
         return res, (x - ak * dx, y - ak * dy)  # возвращаем текущий шаг и координаты для следующего
-
-    def _run(self, start: Vector2D, a: tp.Generator, exit_condition: ExitCondition.tp) -> tp.List[Step]:
-        it, next_point = self._step(start, next(a))
-        steps = [it]  # тут храним все шаги программы
-        while True:
-            it, next_point = self._step(next_point, next(a))  # шагаем
-            steps.append(it)
-            if exit_condition(steps[-2], steps[-1]):  # На основании 2х последних шагов решаем, пора ли заканчивать
-                break
-        return steps
 
 
 def main():

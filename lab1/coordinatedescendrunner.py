@@ -36,13 +36,3 @@ class CoordinateDescendRunner(AbstractRunner):
 
             return Step((0, 0), ak, next_point, self.p.f(*next_point)), next_point
         return Step((0, 0), ak, point, self.p.f(*point)), point
-
-    def _run(self, start: Vector2D, a: tp.Generator, exit_condition: ExitCondition.tp) -> tp.List[Step]:
-        it, next_point = self._step(start, next(a))
-        steps = [it]  # тут храним все шаги программы
-        while True:
-            it, next_point = self._step(next_point, next(a))  # шагаем
-            steps.append(it)
-            if exit_condition(steps[-2], steps[-1]):  # На основании 2х последних шагов решаем, пора ли заканчивать
-                break
-        return steps
