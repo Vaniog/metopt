@@ -1,9 +1,12 @@
 import abc
+import dataclasses
 import math
 import typing as tp
-from timeit import default_timer as timer
 from dataclasses import dataclass
+from timeit import default_timer as timer
+
 import numpy as np
+from matplotlib import pyplot as plt
 
 Vector2D = tp.Tuple[float, float]
 
@@ -48,6 +51,25 @@ class Result:
 
     def accuracy(self, target: Vector2D):
         return Metric.EUCLID(*self.steps[-1].point, *target)
+
+    def plot(self, ax: plt.Axes, cnt=15):
+        xdata = []
+        ydata = []
+        zdata = []
+
+        for step in self._steps(cnt):
+            xdata.append(step.point[0])
+            ydata.append(step.point[1])
+            zdata.append(step.z)
+
+        ax.scatter(xdata, ydata, zdata)
+
+    def _steps(self, cnt: int):
+        step = int(len(self.steps) / cnt) + 1
+        return self.steps[::step]
+
+    def calculate_scale(self, cnt):
+        return tuple(sorted([self._steps(cnt)[-1].point[0], self._steps(cnt)[0].point[1]]))
 
 
 class Metric:
@@ -107,6 +129,19 @@ class Problem:
 
 
 @dataclass
+class PlotConfig:
+    linspace_start: float
+    linspace_stop: float
+    linspace_num: int = 30
+    func_num: int = 150
+    dpi: int = 1000
+    steps: int = 10
+
+    def copy(self, xs, ys):
+        return PlotConfig(xs, ys, **dataclasses.asdict(self))
+
+
+@dataclass
 class AbstractRunner(abc.ABC):
     """
     Класс, используемый для запуска программы.
@@ -130,11 +165,12 @@ class AbstractRunner(abc.ABC):
         end = timer()
         return res, end - st
 
-    def experiment(self, log=False, points=None):
+    def experiment(self, log=False, points=None, plt_cfg: PlotConfig = None):
         """
 
         :param log: если True, будут выводиться все шаги по ходу выполнения программы
         :param points: кол-во точек для геогебры
+        :param plt_cfg: конфигурация графика
         """
         self._log = log
         res, time = self.run()
@@ -145,6 +181,36 @@ class AbstractRunner(abc.ABC):
         if points:
             print(res.geogebra(points))
             print(res.steps[len(res.steps) - 1].point)
+
+        self.func_plot(plt_cfg)
+
+        self.result_plot(plt_cfg, points, res)
+
+    def result_plot(self, plt_cfg, points, res):
+        fig = plt.figure(dpi=plt_cfg.dpi)
+        ax = plt.axes(projection='3d')
+        plt_cfg.linspace_start, plt_cfg.linspace_stop = res.calculate_scale(points)
+        self.plot(ax, plt_cfg)
+        res.plot(ax, points)
+        fig.show()
+
+    def func_plot(self, plt_cfg):
+        fig = plt.figure(dpi=plt_cfg.dpi)
+        ax = plt.axes(projection='3d')
+        self.plot(ax, plt_cfg)
+        fig.show()
+
+    def plot(self, ax: plt.Axes, cfg: PlotConfig):
+        x = np.linspace(cfg.linspace_start, cfg.linspace_stop, cfg.linspace_num)
+        y = np.linspace(cfg.linspace_start, cfg.linspace_stop, cfg.linspace_num)
+
+        X, Y = np.meshgrid(x, y)
+        Z = self.p.f(X, Y)
+
+        ax.contour3D(X, Y, Z, cfg.func_num, cmap='binary')
+        ax.set_xlabel('x')
+        ax.set_ylabel('y')
+        ax.set_zlabel('z')
 
 
 class GradientDescendRunner(AbstractRunner):
@@ -162,7 +228,7 @@ class GradientDescendRunner(AbstractRunner):
         res = Step(_grad, ak, point, z)
         if self._log:
             print(res)
-        return res, (x + ak * dx, y + ak * dy)  # возвращаем текущий шаг и координаты для следующего
+        return res, (x - ak * dx, y - ak * dy)  # возвращаем текущий шаг и координаты для следующего
 
     def _run(self, start: Vector2D, a: tp.Generator, exit_condition: ExitCondition.tp) -> tp.List[Step]:
         it, next_point = self._step(start, next(a))
@@ -173,3 +239,21 @@ class GradientDescendRunner(AbstractRunner):
             if exit_condition(steps[-2], steps[-1]):  # На основании 2х последних шагов решаем, пора ли заканчивать
                 break
         return steps
+
+
+def main():
+    def f(x: float, y: float) -> float:
+        # return x ** 3 * y ** 5 * (4 - x - 7 * y)
+        # return scipy.optimize.rosen((x, y))
+        return x ** 2 + y ** 2
+
+    TARGET = (4 / 3, 20 / 63)
+    PROBLEM = Problem(f, TARGET)
+    print(f(*TARGET))
+    runner = GradientDescendRunner(PROBLEM, (2, 1), Coef.CONST(0.0001),
+                                   ExitCondition.NORM(Metric.EUCLID, 0.0001))
+    runner.experiment(False, 25, plt_cfg=PlotConfig(-3, 3, func_num=100, dpi=500))
+
+
+if __name__ == '__main__':
+    main()
