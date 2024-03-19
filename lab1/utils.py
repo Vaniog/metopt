@@ -39,11 +39,10 @@ class Result:
 
         :param cnt: кол-во точек на выходе
         """
-        arr = []
+        
         step = int(len(self.steps) / cnt) + 1
-        for i, el in enumerate(self.steps):
-            if i % step == 0:
-                arr.append(el)
+        arr = self.steps[::step]
+        
         return "{" + ", ".join(map(lambda el: el.geogebra(), arr)) + "}"
 
     def accuracy(self, target: Vector2D):
@@ -76,7 +75,7 @@ class ExitCondition:
         return check
 
     @staticmethod
-    def NORM(metric: Metric.tp, ep: float):
+    def NORM(metric: Metric.tp, ep: float) -> tp:
         return lambda it1, it2: metric(it1.point[0], it1.point[1], it2.point[0], it2.point[1]) < ep
 
 
@@ -122,7 +121,7 @@ class AbstractRunner(abc.ABC):
     _log: bool = False
 
     @abc.abstractmethod
-    def _run(self, start: Vector2D, a: tp.Generator, exit_condition: ExitCondition.tp) -> tp.List[Step]:
+    def _run(self, start: Vector2D, a: tp.Generator, exit_condition: ExitCondition.tp) -> Result:
         raise NotImplementedError()
 
     def run(self) -> tp.Tuple[Result, float]:
