@@ -3,7 +3,7 @@ import dataclasses
 import math
 import typing as tp
 from dataclasses import dataclass
-from functools import wraps
+from functools import wraps, lru_cache
 from timeit import default_timer as timer
 
 import numpy as np
@@ -27,6 +27,9 @@ class Step:
 
         """
         return f"({self.point[0]:.4f}, {self.point[1]:.4f}, {self.z:.4f})"
+
+    def __hash__(self):
+        return hash(self.point) + hash(self.z)
 
 
 @dataclass
@@ -55,22 +58,26 @@ class Result:
         xdata = []
         ydata = []
         zdata = []
+        color = []
 
-        for step in self._steps(cnt):
+        for i, step in enumerate(self.filtered_steps(cnt)):
             xdata.append(step.point[0])
             ydata.append(step.point[1])
             zdata.append(step.z)
-        if flat:
-            ax.scatter(xdata, ydata)
-        else:
-            ax.scatter(xdata, ydata, zdata)
+            color.append(i)
 
-    def _steps(self, cnt: int):
+        if flat:
+            ax.scatter(xdata, ydata, c="red")
+        else:
+            ax.scatter(xdata, ydata, zdata, c="red")
+
+    @lru_cache
+    def filtered_steps(self, cnt: int):
         step = int(len(self.steps) / cnt) + 1
         return self.steps[::step]
 
-    def calculate_scale(self, cnt):
-        return tuple(sorted([self._steps(cnt)[-1].point[0], self._steps(cnt)[0].point[1]]))
+    def __hash__(self):
+        return hash(self.steps[-1])
 
 
 class Metric:
@@ -151,9 +158,36 @@ class PlotConfig:
     dpi: int = 1000
     steps: int = 10
     level_lines: int = 15
+    scale_coef = 0.25
+
+    _x_start: float = -1
+    _x_stop: float = -1
+    _y_start: float = -1
+    _y_stop: float = -1
 
     def copy(self, xs, ys):
         return PlotConfig(xs, ys, **dataclasses.asdict(self))
+
+    @staticmethod
+    def __get_coordinate(idx: int):
+        return lambda el: el.point[idx]
+
+    def _calculate_scale(self, idx: int, res: Result, cnt: int):
+        start, stop = (
+            min(map(self.__get_coordinate(idx), res.filtered_steps(cnt))),
+            max(map(self.__get_coordinate(idx), res.filtered_steps(cnt)))
+        )
+        l = stop - start
+
+        return start - (l * self.scale_coef / 2), stop + (l * self.scale_coef / 2)
+
+    def calculate_scale(self, res: Result, cnt: int):
+        self._x_start, self._x_stop = self._calculate_scale(0, res, cnt)
+        self._y_start, self._y_stop = self._calculate_scale(1, res, cnt)
+
+    def __post_init__(self):
+        self._x_start = self._y_start = self.linspace_start
+        self._x_stop = self._y_stop = self.linspace_stop
 
 
 @dataclass
@@ -212,7 +246,7 @@ class AbstractRunner(abc.ABC):
         self.func_plot(plt_cfg)
         self.level_curves(plt_cfg)
 
-        plt_cfg.linspace_start, plt_cfg.linspace_stop = res.calculate_scale(points)
+        plt_cfg.calculate_scale(res, points)
         self.result_plot(plt_cfg, points, res)
         self.res_level_curves(plt_cfg, points, res)
 
@@ -238,28 +272,28 @@ class AbstractRunner(abc.ABC):
     def res_level_curves(self, cfg: PlotConfig, cnt: int, res: Result):
         fig = plt.figure(dpi=cfg.dpi)
         ax = plt.axes()
-        self._level_curves(ax, cfg)
         res.plot(ax, cnt, flat=True)
+        self._level_curves(ax, cfg)
 
         fig.show()
 
     def _level_curves(self, ax, cfg: PlotConfig):
         X, Y = np.meshgrid(*self._linspace(cfg))
         Z = self.o.f(X, Y)
-        ax.contour(X, Y, Z, levels=cfg.level_lines)
+        ax.contour(X, Y, Z, levels=cfg.level_lines, cmap='viridis')
 
     @staticmethod
     def _linspace(cfg):
         return (
-            np.linspace(cfg.linspace_start, cfg.linspace_stop, cfg.linspace_num),
-            np.linspace(cfg.linspace_start, cfg.linspace_stop, cfg.linspace_num)
+            np.linspace(cfg._x_start, cfg._x_stop, cfg.linspace_num),
+            np.linspace(cfg._y_start, cfg._y_stop, cfg.linspace_num)
         )
 
     def plot(self, ax: plt.Axes, cfg: PlotConfig):
         X, Y = np.meshgrid(*self._linspace(cfg))
         Z = self.o.f(X, Y)
 
-        ax.contour3D(X, Y, Z, cfg.func_num, cmap='binary')
+        ax.contour3D(X, Y, Z, cfg.func_num, cmap='viridis')
         ax.set_xlabel('x')
         ax.set_ylabel('y')
         ax.set_zlabel('z')
