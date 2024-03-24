@@ -245,8 +245,8 @@ class AbstractRunner(abc.ABC):
             print(res.geogebra(points))
             print(res.steps[len(res.steps) - 1].point)
 
-        self.func_plot(plt_cfg)
-        self.level_curves(plt_cfg)
+        #self.func_plot(plt_cfg)
+        #self.level_curves(plt_cfg)
 
         plt_cfg.calculate_scale(res, points)
         self.result_plot(plt_cfg, points, res)
