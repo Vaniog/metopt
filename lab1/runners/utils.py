@@ -8,6 +8,7 @@ from timeit import default_timer as timer
 
 import numpy as np
 from matplotlib import pyplot as plt
+import matplotlib as mtl
 
 Vector2D = tp.Tuple[float, float]
 
@@ -64,12 +65,12 @@ class Result:
             xdata.append(step.point[0])
             ydata.append(step.point[1])
             zdata.append(step.z)
-            color.append(i)
+            color.append(math.pow(i, 1/4))
 
         if flat:
-            ax.scatter(xdata, ydata, c="red")
+            ax.scatter(xdata, ydata, c=color, cmap='afmhot')
         else:
-            ax.scatter(xdata, ydata, zdata, c="red")
+            ax.scatter(xdata, ydata, zdata, c=color, cmap='afmhot')
 
     @lru_cache
     def filtered_steps(self, cnt: int):
