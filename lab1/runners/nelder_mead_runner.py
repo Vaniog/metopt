@@ -15,4 +15,4 @@ class NelderMeadRunner(AbstractRunner):
             return self.o.f(*p)
 
         res = minimize(f, point, method='Nelder-Mead', tol=self.tol)
-        return Step(point, self.o.f(*point)), point
+        return Step(point, self.o.f(*point)), res["x"]
