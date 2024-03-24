@@ -237,16 +237,16 @@ class AbstractRunner(abc.ABC):
         self._log = log
         res, time = self.run()
         acc = res.accuracy(self.o.target)
-        print(f"Точность: {acc:.8f}")  # расстояние между полученной и искомой точками
-        print(f"Кол-во шагов: {len(res.steps)}")
+        print(f"Точность (расстояние до реального минимума): {acc:.8f}")  # расстояние между полученной и искомой точками
+        print(f"Кол-во запросов к оракулу: {len(res.steps)}")
         print(f"Время: {time:.4f} с")
         if points:
             points = min(points, len(res.steps))
-            print(res.geogebra(points))
-            print(res.steps[len(res.steps) - 1].point)
+            # print(res.geogebra(points))
+            # print(res.steps[len(res.steps) - 1].point)
 
-        #self.func_plot(plt_cfg)
-        #self.level_curves(plt_cfg)
+        # self.func_plot(plt_cfg)
+        # self.level_curves(plt_cfg)
 
         plt_cfg.calculate_scale(res, points)
         self.result_plot(plt_cfg, points, res)
