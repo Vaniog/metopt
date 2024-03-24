@@ -1,33 +1,18 @@
 from .utils import *
-
-
-class Direction:
-    _v_i: int
-    FORWARD_X: Vector = Vector(1, 0)
-    FORWARD_Y: Vector = Vector(0, 1)
-    BACKWARD_X: Vector = Vector(-1, 0)
-    BACKWARD_Y: Vector = Vector(0, -1)
-    CYCLE: list[Vector] = [FORWARD_X, FORWARD_Y, BACKWARD_X, BACKWARD_Y]
-
-    def __init__(self):
-        self._v_i = 0
-
-    def get_v(self) -> Vector:
-        return Direction.CYCLE[self._v_i]
-
-    def rotate(self):
-        self._v_i = (self._v_i + 1) % len(Direction.CYCLE)
+from .coordinate_descend_runner import Direction
 
 
 class CoordinateDescendImprovedRunner(AbstractRunner):
-    direction: Direction = Direction()
+    direction: Direction
     step = 1
     step_min = 0.000001
 
     def _try_step(self, point: Vector) -> tp.Tuple[Vector, bool]:
-        for _ in range(4):
+        self.dim = point.dim
+        self.direction = Direction(self.dim)
+        for _ in range(self.dim * 2):
             d = self.direction.get_v()
-            next_point: Vector = point + d * self.step
+            next_point: Vector = point + (d * self.step)
             if self._log:
                 print("point:", next_point)
                 print("f:", self.o.f(*next_point))
@@ -37,7 +22,7 @@ class CoordinateDescendImprovedRunner(AbstractRunner):
                 self.direction.rotate()
                 continue
             return next_point, True
-        return Vector(0, 0), False
+        return point, False
 
     def _step(self, point: Vector, ak: float) -> tp.Tuple[Step, Vector]:
         while self.step > self.step_min:
