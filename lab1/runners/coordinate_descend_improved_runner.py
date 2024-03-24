@@ -19,9 +19,10 @@ class Direction:
         self._v_i = (self._v_i + 1) % len(Direction.CYCLE)
 
 
-class CoordinateDescendRunner(AbstractRunner):
+class CoordinateDescendImprovedRunner(AbstractRunner):
     direction: Direction = Direction()
     step = 1
+    step_min = 0.000001
 
     def _try_step(self, point: Vector2D) -> tp.Tuple[Vector2D, bool]:
         for _ in range(4):
@@ -39,8 +40,9 @@ class CoordinateDescendRunner(AbstractRunner):
         return (0, 0), False
 
     def _step(self, point: Vector2D, ak: float) -> tp.Tuple[Step, Vector2D]:
-        self.step = ak
-        next_point, ok = self._try_step(point)
-        if ok:
-            return Step(next_point, self.o.f(*next_point)), next_point
+        while self.step > self.step_min:
+            next_point, ok = self._try_step(point)
+            if ok:
+                return Step(next_point, self.o.f(*next_point)), next_point
+            self.step /= 2
         return Step(point, self.o.f(*point)), point
