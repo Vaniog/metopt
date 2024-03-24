@@ -34,20 +34,19 @@ def trinary_search(f: tp.Callable[[float], float], x_max: float, iterations: int
 class CoordinateGradientRunner(AbstractRunner):
     last_step = None
 
-    def _step(self, point: Vector2D, ak: float) -> tp.Tuple[Step, Vector2D]:
-        x, y = point
-        z = self.o.f(*point)
-        dx, dy = _grad = GradientDescendRunner.grad(self.o.f, point, ak)
+    def _step(self, point: Vector, ak: float) -> tp.Tuple[Step, Vector]:
+        z = self.o.f(point)
+        _grad = GradientDescendRunner.grad(self.o.f, point, ak)
         res = Step(point, z)
         if self._log:
             print(res)
 
         def f_grad(t: float):
-            return self.o.f(x - t * dx, y - t * dy)
+            return self.o.f(point - _grad * t)
 
         if self.last_step is None:
             self.last_step = search_up(f_grad)
         t = trinary_search(f_grad, self.last_step * 2, 10)
         self.last_step = t
 
-        return res, (x - t * dx, y - t * dy)  # возвращаем текущий шаг и координаты для следующего
+        return res, point - _grad * t  # возвращаем текущий шаг и координаты для следующего

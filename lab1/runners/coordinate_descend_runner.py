@@ -3,16 +3,16 @@ from .utils import *
 
 class Direction:
     _v_i: int
-    FORWARD_X: Vector2D = (1, 0)
-    FORWARD_Y: Vector2D = (0, 1)
-    BACKWARD_X: Vector2D = (-1, 0)
-    BACKWARD_Y: Vector2D = (0, -1)
-    CYCLE: list[Vector2D] = [FORWARD_X, FORWARD_Y, BACKWARD_X, BACKWARD_Y]
+    FORWARD_X: Vector = Vector(1, 0)
+    FORWARD_Y: Vector = Vector(0, 1)
+    BACKWARD_X: Vector = Vector(-1, 0)
+    BACKWARD_Y: Vector = Vector(0, -1)
+    CYCLE: list[Vector] = [FORWARD_X, FORWARD_Y, BACKWARD_X, BACKWARD_Y]
 
     def __init__(self):
         self._v_i = 0
 
-    def get_v(self):
+    def get_v(self) -> Vector:
         return Direction.CYCLE[self._v_i]
 
     def rotate(self):
@@ -23,10 +23,10 @@ class CoordinateDescendRunner(AbstractRunner):
     direction: Direction = Direction()
     step = 1
 
-    def _try_step(self, point: Vector2D) -> tp.Tuple[Vector2D, bool]:
+    def _try_step(self, point: Vector) -> tp.Tuple[Vector, bool]:
         for _ in range(4):
             d = self.direction.get_v()
-            next_point: Vector2D = (point[0] + d[0] * self.step, point[1] + d[1] * self.step)
+            next_point: Vector = point + (d * self.step)
             if self._log:
                 print("point:", next_point)
                 print("f:", self.o.f(*next_point))
@@ -36,9 +36,9 @@ class CoordinateDescendRunner(AbstractRunner):
                 self.direction.rotate()
                 continue
             return next_point, True
-        return (0, 0), False
+        return Vector(0, 0), False
 
-    def _step(self, point: Vector2D, ak: float) -> tp.Tuple[Step, Vector2D]:
+    def _step(self, point: Vector, ak: float) -> tp.Tuple[Step, Vector]:
         self.step = ak
         next_point, ok = self._try_step(point)
         if ok:

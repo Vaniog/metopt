@@ -5,6 +5,7 @@ import typing as tp
 from dataclasses import dataclass
 from functools import wraps, lru_cache
 from timeit import default_timer as timer
+from typing import Iterator
 
 import numpy as np
 from matplotlib import pyplot as plt
@@ -13,13 +14,55 @@ import matplotlib as mtl
 Vector2D = tp.Tuple[float, float]
 
 
+class Vector(tp.Iterable):
+    coords: tp.Tuple[float]
+    dim: int
+
+    def __init__(self, *coords: float):
+        self.coords = coords
+
+    @property
+    def dim(self) -> int:
+        return len(self.coords)
+
+    def __getitem__(self, item):
+        return self.coords[item]
+
+    def assert_equal_dim(self, other: 'Vector'):
+        if self.dim != other.dim:
+            raise Exception(f"unable to perform operation on vectors with dim {self.dim} and {other.dim}")
+
+    def __op(self, other, operation: tp.Callable):
+        if not isinstance(other, Vector):
+            raise Exception(f"can only be applied to another {self.__class__.__name__}")
+        self.assert_equal_dim(other)
+        return Vector(*map(lambda it: operation(it[1], other[it[0]]), enumerate(self.coords)))
+
+    def __add__(self, other):
+        return self.__op(other, lambda el1, el2: el1 + el2)
+
+    def __sub__(self, other):
+        return self.__op(other, lambda el1, el2: el1 - el2)
+
+    def __mul__(self, other):
+        if not isinstance(other, (float, int)):
+            raise Exception("can only be applied to vector and number")
+        return Vector(*map(lambda el: el * other, self))
+
+    def __iter__(self) -> Iterator:
+        return iter(self.coords)
+
+    def __repr__(self):
+        return f"V{str(self.coords)}"
+
+
 @dataclass
 class Step:
     """
     Класс, отвечающий за хранение отдельной итерации
 
     """
-    point: Vector2D
+    point: Vector
     z: float
 
     def geogebra(self) -> str:
@@ -52,8 +95,8 @@ class Result:
 
         return "{" + ", ".join(map(lambda el: el.geogebra(), arr)) + "}"
 
-    def accuracy(self, target: Vector2D):
-        return Metric.EUCLID(*self.steps[-1].point, *target)
+    def accuracy(self, target: Vector):
+        return Metric.EUCLID(self.steps[-1].point, target)
 
     def plot(self, ax: plt.Axes, cnt=15, flat=False):
         xdata = []
@@ -68,9 +111,9 @@ class Result:
             color.append(math.pow(i, 1 / 4))
 
         if flat:
-            ax.scatter(xdata, ydata, c=color, cmap='afmhot')
+            ax.scatter(xdata, ydata, c=color, cmap='afmhot', zorder=2)
         else:
-            ax.scatter(xdata, ydata, zdata, c=color, cmap='afmhot')
+            ax.scatter(xdata, ydata, zdata, c=color, cmap='afmhot', zorder=2)
 
     @lru_cache
     def filtered_steps(self, cnt: int):
@@ -85,11 +128,12 @@ class Metric:
     """
     Тут храним разные нормы
     """
-    tp = tp.Callable[[float, float, float, float], float]
+    tp = tp.Callable[[Vector, Vector], float]
 
     @staticmethod
-    def EUCLID(x1, y1, x2, y2):
-        return math.sqrt((x1 - x2) ** 2 + (y1 - y2) ** 2)
+    def EUCLID(v1: Vector, v2: Vector) -> float:
+        v1.assert_equal_dim(v2)
+        return math.sqrt(sum(map(lambda it: (it[1] - v2[it[0]]) ** 2, enumerate(v1))))
 
 
 class ExitCondition:
@@ -108,7 +152,7 @@ class ExitCondition:
 
     @staticmethod
     def NORM(metric: Metric.tp, ep: float) -> tp:
-        return lambda it1, it2: metric(it1.point[0], it1.point[1], it2.point[0], it2.point[1]) < ep
+        return lambda it1, it2: metric(it1.point, it2.point) < ep
 
 
 class Coef:
@@ -128,26 +172,29 @@ class Coef:
         return Coef.GEOMETRIC_PROGRESSION(const, 1)
 
 
-@dataclass
 class Oracle:
     """
     Тут храним все исходные данные, в том числе искомую точку, чтобы сравнивать полученный результат с ней
     """
-    f: tp.Callable[[float, float], float]
-    target: Vector2D
-    steps: list[Step] = dataclasses.field(default_factory=list)
+    f: tp.Callable[[Vector], float]
+    target: Vector
+    steps: list[Step]
+
+    def __init__(self, f: tp.Callable, target: Vector):
+        self.f = self.dec(f)
+        self.target = target
+        self.steps = []
 
     def dec(self, f: tp.Callable):
         @wraps(f)
-        def inner(x: float, y: float) -> float:
-            r = f(x, y)
-            self.steps.append(Step((x, y), r))
+        def inner(v: Vector, *args) -> float:
+            if not isinstance(v, Vector):
+                v = Vector(*((v,) + args))
+            r = f(*v)
+            self.steps.append(Step(v, r))
             return r
 
         return inner
-
-    def __post_init__(self):
-        self.f = self.dec(self.f)
 
 
 @dataclass
@@ -155,16 +202,18 @@ class PlotConfig:
     linspace_start: float
     linspace_stop: float
     linspace_num: int = 30
-    func_num: int = 150
+    func_lines_num: int = 150
     dpi: int = 1000
     steps: int = 10
     level_lines: int = 15
-    scale_coef = 0.25
+    scale_coef: float = 0.25
+    draw_function: bool = False
+    draw_steps: bool = True
 
-    _x_start: float = -1
-    _x_stop: float = -1
-    _y_start: float = -1
-    _y_stop: float = -1
+    _x_start = -1
+    _x_stop = -1
+    _y_start = -1
+    _y_stop = -1
 
     def copy(self, xs, ys):
         return PlotConfig(xs, ys, **dataclasses.asdict(self))
@@ -199,17 +248,17 @@ class AbstractRunner(abc.ABC):
     """
     o: Oracle
 
-    start: Vector2D
+    start: Vector
     a: tp.Generator
     exit_condition: ExitCondition.tp
 
     _log: bool = False
 
     @abc.abstractmethod
-    def _step(self, point: Vector2D, ak: float) -> tp.Tuple[Step, Vector2D]:
+    def _step(self, point: Vector, ak: float) -> tp.Tuple[Step, Vector]:
         raise NotImplementedError()
 
-    def _run(self, start: Vector2D, a: tp.Generator, exit_condition: ExitCondition.tp):
+    def _run(self, start: Vector, a: tp.Generator, exit_condition: ExitCondition.tp):
         it, next_point = self._step(start, next(a))
         steps = [it]  # тут храним все шаги программы
         while True:
@@ -237,7 +286,8 @@ class AbstractRunner(abc.ABC):
         self._log = log
         res, time = self.run()
         acc = res.accuracy(self.o.target)
-        print(f"Точность (расстояние до реального минимума): {acc:.8f}")  # расстояние между полученной и искомой точками
+        print(
+            f"Точность (расстояние до реального минимума): {acc:.8f}")  # расстояние между полученной и искомой точками
         print(f"Кол-во запросов к оракулу: {len(res.steps)}")
         print(f"Время: {time:.4f} с")
         if points:
@@ -245,12 +295,18 @@ class AbstractRunner(abc.ABC):
             # print(res.geogebra(points))
             # print(res.steps[len(res.steps) - 1].point)
 
-        # self.func_plot(plt_cfg)
-        # self.level_curves(plt_cfg)
+        dim = res.steps[-1].point.dim
+        if dim != 2:
+            print(f"can't draw plot for {dim}-dimensional function")
+            return
+        if plt_cfg.draw_function:
+            self.func_plot(plt_cfg)
+            self.level_curves(plt_cfg)
 
-        plt_cfg.calculate_scale(res, points)
-        self.result_plot(plt_cfg, points, res)
-        self.res_level_curves(plt_cfg, points, res)
+        if plt_cfg.draw_steps:
+            plt_cfg.calculate_scale(res, points)
+            self.result_plot(plt_cfg, points, res)
+            self.res_level_curves(plt_cfg, points, res)
 
     def result_plot(self, plt_cfg, points, res):
         fig = plt.figure(dpi=plt_cfg.dpi)
@@ -274,14 +330,14 @@ class AbstractRunner(abc.ABC):
     def res_level_curves(self, cfg: PlotConfig, cnt: int, res: Result):
         fig = plt.figure(dpi=cfg.dpi)
         ax = plt.axes()
-        res.plot(ax, cnt, flat=True)
         self._level_curves(ax, cfg)
+        res.plot(ax, cnt, flat=True)
 
         fig.show()
 
     def _level_curves(self, ax, cfg: PlotConfig):
         X, Y = np.meshgrid(*self._linspace(cfg))
-        Z = self.o.f(X, Y)
+        Z = self.o.f(Vector(X, Y))
         ax.contour(X, Y, Z, levels=cfg.level_lines, cmap='viridis')
 
     @staticmethod
@@ -293,9 +349,9 @@ class AbstractRunner(abc.ABC):
 
     def plot(self, ax: plt.Axes, cfg: PlotConfig):
         X, Y = np.meshgrid(*self._linspace(cfg))
-        Z = self.o.f(X, Y)
+        Z = self.o.f(Vector(X, Y))
 
-        ax.contour3D(X, Y, Z, cfg.func_num, cmap='viridis')
+        ax.contour3D(X, Y, Z, cfg.func_lines_num, cmap='viridis', alpha=0.4)
         ax.set_xlabel('x')
         ax.set_ylabel('y')
         ax.set_zlabel('z')
