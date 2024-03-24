@@ -65,7 +65,7 @@ class Result:
             xdata.append(step.point[0])
             ydata.append(step.point[1])
             zdata.append(step.z)
-            color.append(math.pow(i, 1/4))
+            color.append(math.pow(i, 1 / 4))
 
         if flat:
             ax.scatter(xdata, ydata, c=color, cmap='afmhot')
@@ -241,6 +241,7 @@ class AbstractRunner(abc.ABC):
         print(f"Кол-во шагов: {len(res.steps)}")
         print(f"Время: {time:.4f} с")
         if points:
+            points = min(points, len(res.steps))
             print(res.geogebra(points))
             print(res.steps[len(res.steps) - 1].point)
 
