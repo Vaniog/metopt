@@ -1,7 +1,7 @@
 from scipy.optimize import minimize
 import typing as tp
 
-from lab1.runners import Step
+from .utils import Step
 from .utils import AbstractRunner
 
 Vector2D = tp.Tuple[float, float]
