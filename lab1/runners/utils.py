@@ -1,5 +1,6 @@
 import abc
 import dataclasses
+import inspect
 import math
 import typing as tp
 from dataclasses import dataclass
@@ -95,7 +96,12 @@ class Result:
 
         return "{" + ", ".join(map(lambda el: el.geogebra(), arr)) + "}"
 
-    def accuracy(self, target: Vector):
+    def queries(self):
+        return len(self.steps)
+
+    def accuracy(self, target: Vector | None):
+        if target is None:
+            return None
         return Metric.EUCLID(self.steps[-1].point, target)
 
     def plot(self, ax: plt.Axes, cnt=15, flat=False):
@@ -177,10 +183,10 @@ class Oracle:
     Тут храним все исходные данные, в том числе искомую точку, чтобы сравнивать полученный результат с ней
     """
     f: tp.Callable[[Vector], float]
-    target: Vector
+    target: Vector | None
     steps: list[Step]
 
-    def __init__(self, f: tp.Callable, target: Vector):
+    def __init__(self, f: tp.Callable, target: Vector | None):
         self.f = self.dec(f)
         self.target = target
         self.steps = []
@@ -240,8 +246,18 @@ class PlotConfig:
         self._x_stop = self._y_stop = self.linspace_stop
 
 
+class RunnerMeta(abc.ABCMeta, type):
+    runners = []
+
+    def __new__(mcs, name, bases, dct):
+        new_runner = super().__new__(mcs, name, bases, dct)
+        if not inspect.isabstract(new_runner):
+            mcs.runners.append(new_runner)
+        return new_runner
+
+
 @dataclass
-class AbstractRunner(abc.ABC):
+class AbstractRunner(abc.ABC, metaclass=RunnerMeta):
     """
     Класс, используемый для запуска программы.
     Хранит в себе все исходные данные и позволяет задавать параметры программы
@@ -280,7 +296,7 @@ class AbstractRunner(abc.ABC):
         """
 
         :param log: если True, будут выводиться все шаги по ходу выполнения программы
-        :param points: кол-во точек для геогебры
+        :param points: кол-во точек для графика
         :param plt_cfg: конфигурация графика
         """
         self._log = log
