@@ -27,14 +27,17 @@ class BenchmarkResult:
         def headers(self):
             return list(dataclasses.asdict(self).keys())
 
-    def __init__(self, results):
+        def parameters(self):
+            return list(filter(lambda el: el != 'name', dataclasses.asdict(self).keys()))
+
+    def __init__(self, results: tp.List['ExperimentResult']):
         self.results = results
 
     @classmethod
     def compare(cls, runners: tp.Iterable[tp.Type[AbstractRunner]], params: tp.Dict):
         res = []
         for r in runners:
-            # print(f"running {r.__name__}")
+            print(f"--running {r.__name__}")
             res.append(cls.process_runner(r, params))
         return BenchmarkResult(res)
 
@@ -56,7 +59,7 @@ class BenchmarkResult:
         res = cls._run(runner)
         return res
 
-    def top(self, *fields: str, silent: bool = False):
+    def top(self, *fields: str, silent: bool = False, total=True):
         score = defaultdict(int)
         for f in fields:
             sort_by = lambda r: getattr(r, f)
@@ -65,7 +68,7 @@ class BenchmarkResult:
             if not silent:
                 self.print_results(sort_by=sort_by, name=f"sorted by {f}")
 
-        if not silent:
+        if not silent and total:
             print()
             print("total results (less score means more efficient)")
             fmt = []
@@ -110,19 +113,24 @@ class BenchmarkResult:
 
     @classmethod
     def plot_results(cls, results: tp.List['BenchmarkResult'], fields: tp.Tuple, names: tp.List[str]):
+        assert len(results) > 0
         assert len(fields) < 10
         runner_names = list(map(lambda el: el.name, results[0].results))
         colors = list(mcolors.TABLEAU_COLORS.values())
         assert len(runner_names) <= len(colors)
-        plt.figure(figsize=(8, 4 * len(fields)), dpi=500)
+        plt.figure(figsize=(8, 4 * len(fields)), dpi=300)
         for i, f in enumerate(fields):
             fig = plt.subplot(int(f"{len(fields)}1{i + 1}"))
             fig.set_title(f)
 
             for j, runner in enumerate(runner_names):
                 values = []
+
                 for r in results:
-                    values.append(getattr(r.results[j], f))
+                    if f == 'top':
+                        values.append(r.top(*r.results[0].parameters(), silent=True)[runner])
+                    else:
+                        values.append(getattr(r.results[j], f))
 
                 plt.plot(names, values, color=colors[j], label=runner)
             if i == 0:
@@ -176,7 +184,7 @@ def main2():
         exit_condition=ExitCondition.NORM(Metric.EUCLID, 0.00001)
     ), "start", (Vector(2, 1), Vector(2, 2), Vector(2, 3),))
 
-    BenchmarkResult.plot_results(bs, ("queries", "accuracy"), names=["1", "2", "3"])
+    BenchmarkResult.plot_results(bs, ("queries", "accuracy", "time", "top"), names=["1", "2", "3"])
 
 
 if __name__ == '__main__':

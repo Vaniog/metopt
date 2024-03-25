@@ -371,3 +371,21 @@ class AbstractRunner(abc.ABC, metaclass=RunnerMeta):
         ax.set_xlabel('x')
         ax.set_ylabel('y')
         ax.set_zlabel('z')
+
+
+def plot(objective):
+    # define range for input
+    r_min, r_max = -10.0, 10.0
+    # sample input range uniformly at 0.1 increments
+    xaxis = np.arange(r_min, r_max, 0.1)
+    yaxis = np.arange(r_min, r_max, 0.1)
+    # create a mesh from the axis
+    x, y = np.meshgrid(xaxis, yaxis)
+    # compute targets
+    results = objective(x, y)
+    # create a surface plot with the jet color scheme
+    figure = plt.figure()
+    axis = plt.axes(projection='3d')
+    axis.plot_surface(x, y, results, cmap='jet')
+    # show the plot
+    plt.show()
