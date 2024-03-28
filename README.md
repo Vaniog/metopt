@@ -4,7 +4,7 @@
 - Тарасов Иван M3233
 - Фарафонов Егор M3233
 
-<img src="https://github.com/Vaniog/metopt/tree/main/lab1/img/metopt-logo.png" width="48">
+<img src="https://github.com/Vaniog/metopt/blob/main/lab1/img/metopt-logo.png" width="48">
 
 ### Лабораторная работа №1
 
