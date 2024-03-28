@@ -1,8 +1,10 @@
 # Методы оптимизации
 
-- Гуров Матвей M3233 ![logo](/lab1/img/metopt-logo.png)
+- Гуров Матвей M3233
 - Тарасов Иван M3233
 - Фарафонов Егор M3233
+
+<img src="https://github.com/Vaniog/metopt/tree/main/lab1/img/metopt-logo.png" width="48">
 
 ### Лабораторная работа №1
 
