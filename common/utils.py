@@ -35,11 +35,13 @@ class Vector(tp.Iterable):
 
     def assert_equal_dim(self, other):
         if self.dim != other.dim:
-            raise Exception(f"unable to perform operation on vectors with dim {self.dim} and {other.dim}")
+            raise Exception(
+                f"unable to perform operation on vectors with dim {self.dim} and {other.dim}")
 
     def __op(self, other, operation: tp.Callable):
         if not isinstance(other, Vector):
-            raise Exception(f"can only be applied to another {self.__class__.__name__}")
+            raise Exception(
+                f"can only be applied to another {self.__class__.__name__}")
         self.assert_equal_dim(other)
         return Vector(*map(lambda it: operation(it[1], other[it[0]]), enumerate(self.coords)))
 
@@ -198,7 +200,7 @@ class Oracle:
     def dec(self, f: tp.Callable):
         @wraps(f)
         def inner(v: Vector, *args) -> float:
-            if not isinstance(v, (Vector, list, tuple, np.ndarray)):
+            if not isinstance(v, (Vector, list, tuple)):
                 v = Vector(*((v,) + args))
             elif isinstance(v, np.ndarray):
                 v = Vector(*v)
@@ -394,7 +396,8 @@ class OldRunner(AbstractRunner, ABC):
         while True:
             it, next_point = self._step(next_point, next(self.a))  # шагаем
             steps.append(it)
-            if self.exit_condition(steps[-2], steps[-1]):  # На основании 2х последних шагов решаем, пора ли заканчивать
+            # На основании 2х последних шагов решаем, пора ли заканчивать
+            if self.exit_condition(steps[-2], steps[-1]):
                 break
 
 

@@ -44,7 +44,7 @@ class NewtonConstRunner(AbstractRunner):
         prev = np.array(start.coords)
         cur = np.array(start.coords)
         while True:
-            cur += self.sk(cur, self.learning_rate)
+            cur = cur + self.sk(cur, self.learning_rate)
             if np.linalg.norm(prev - cur) < 0.001:
                 break
             prev = cur
@@ -54,5 +54,8 @@ def f(x, y) -> float:
     return 2*(x-1)**2+y*y
 
 
-ncr = NewtonConstRunner(Oracle(f, None), Vector(0, 0))
+ncr = NewtonConstRunner(Oracle(f, Vector(1, 0)), Vector(0, 0))
 print(ncr.sk(np.array([3, 5])))
+
+ncr.experiment()
+print(1)
