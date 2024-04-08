@@ -13,6 +13,9 @@ import numpy as np
 from matplotlib import pyplot as plt
 import matplotlib as mtl
 
+from overtake import overtake
+from typing_extensions import overload
+
 Vector2D = tp.Tuple[float, float]
 
 
@@ -136,16 +139,24 @@ class Result:
         return hash(self.steps[-1])
 
 
+def _check_types(tp: type, *args):
+    return all(map(lambda v: isinstance(v, tp), args))
+
+
 class Metric:
     """
     Тут храним разные нормы
     """
-    tp = tp.Callable[[Vector, Vector], float]
+    _vector = Vector | np.ndarray
+    tp = tp.Callable[[_vector, _vector], float]
 
-    @staticmethod
-    def EUCLID(v1: Vector, v2: Vector) -> float:
-        v1.assert_equal_dim(v2)
-        return math.sqrt(sum(map(lambda it: (it[1] - v2[it[0]]) ** 2, enumerate(v1))))
+    @classmethod
+    def EUCLID(cls, v1: _vector, v2: _vector) -> float:
+        if _check_types(Vector, v1, v2):
+            v1.assert_equal_dim(v2)
+            return math.sqrt(sum(map(lambda it: (it[1] - v2[it[0]]) ** 2, enumerate(v1))))
+        elif _check_types(np.ndarray, v1, v2):
+            return np.linalg.norm(v2 - v1)
 
 
 class ExitCondition:
@@ -164,7 +175,13 @@ class ExitCondition:
 
     @staticmethod
     def NORM(metric: Metric.tp, ep: float) -> tp:
-        return lambda it1, it2: metric(it1.point, it2.point) < ep
+        def inner(it1, it2):
+            if _check_types(Step, it1, it2):
+                return metric(it1.point, it2.point) < ep
+            else:
+                return metric(it1, it2) < ep
+
+        return inner
 
 
 class Coef:
@@ -271,17 +288,45 @@ class RunnerMeta(abc.ABCMeta, type):
 
 
 @dataclass
+class Options:
+    exit_condition_threshold: float = 0.01
+    exit_condition: ExitCondition.tp = None
+
+    def __post_init__(self):
+        if not self.exit_condition:
+            self.exit_condition = ExitCondition.NORM(Metric.EUCLID, self.exit_condition_threshold)
+
+    @classmethod
+    def default(cls, override: dict = None):
+        if override:
+            return cls(**override)
+        return cls()
+
+
 class AbstractRunner(abc.ABC, metaclass=RunnerMeta):
     """
     Класс, используемый для запуска программы.
     Хранит в себе все исходные данные и позволяет задавать параметры программы
     """
+
     o: Oracle
-
     start: Vector
+    opts: Options
 
-    def __post_init__(self):
+    def __init__(self, o: Oracle, start: Vector, opts: Options | None = None, override_opts: dict | None = None):
+        self.o = o
+        self.start = start
+        if not opts:
+            opts = self.__default_opts(override_opts)
+        self.opts = opts
         self._log = False
+
+    def __default_opts(self, override: dict = None) -> Options:
+        for opts_type in self.__annotations__.values():
+            if issubclass(opts_type, Options):
+                return opts_type.default(override)
+
+        raise AttributeError(f"All runners classes must have opts annotation, {type(self).__name__} hasn't")
 
     def set_log(self, log: bool):
         self._log = log
@@ -382,15 +427,34 @@ class AbstractRunner(abc.ABC, metaclass=RunnerMeta):
         ax.set_zlabel('z')
 
 
+@dataclass
+class OldOptions(Options):
+    a: tp.Generator = Coef.CONST(0.001)
+
+
 class OldRunner(AbstractRunner, ABC):
     a: tp.Generator
     exit_condition: ExitCondition.tp
 
-    def __init__(self, o: Oracle, start: Vector, a: tp.Generator, exit_condition: ExitCondition.tp):
-        self.o = o
-        self.start = start
+    opts: OldOptions
+
+    @overload
+    def __init__(self, o: Oracle, start: Vector, a: tp.Generator,
+                 exit_condition: ExitCondition.tp):
+        super().__init__(o, start, OldOptions(exit_condition, a))
         self.a = a
         self.exit_condition = exit_condition
+
+    @overload
+    def __init__(self, o: Oracle, start: Vector, opts: OldOptions):
+        super().__init__(o, start, opts)
+        self.a = opts.a
+        self.exit_condition = opts.exit_condition
+
+    # noinspection PyMissingConstructor
+    @overtake
+    def __init__(*args, **kwargs):
+        ...
 
     @abc.abstractmethod
     def _step(self, point: Vector, ak: float) -> tp.Tuple[Step, Vector]:

@@ -16,7 +16,7 @@ def grad(f, p: np.ndarray, delta: float) -> np.ndarray:
 
 
 def grad2(f, p: np.ndarray, delta: float) -> np.ndarray:
-    dgs: np.ndarray = []
+    dgs = []
 
     gp = grad(f, p, delta)
     for i, _ in enumerate(p):

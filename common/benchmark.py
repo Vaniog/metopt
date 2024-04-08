@@ -3,11 +3,14 @@ from collections import defaultdict
 from dataclasses import dataclass
 import typing as tp
 
-from lab1.runners import AbstractRunner, CoordinateGradientRunner, GradientDescendRunner, Vector, Oracle, Coef, \
-    ExitCondition, Metric, RunnerMeta
 from tabulate import tabulate
 from matplotlib import pyplot as plt
 import matplotlib.colors as mcolors
+from typing_extensions import overload
+from overtake import overtake
+from lab2.runners import *
+
+from common.utils import *
 
 
 class BenchmarkResult:
@@ -34,12 +37,27 @@ class BenchmarkResult:
         self.results = results
 
     @classmethod
+    @overload
     def compare(cls, runners: tp.Iterable[tp.Type[AbstractRunner]], params: tp.Dict):
         res = []
         for r in runners:
             print(f"--running {r.__name__}")
-            res.append(cls.process_runner(r, params))
+            res.append(cls.process_runner(r(**params)))
         return BenchmarkResult(res)
+
+    @classmethod
+    @overload
+    def compare(cls, runners: tp.Iterable[AbstractRunner]):
+        res = []
+        for r in runners:
+            print(f"--running {r.__class__.__name__}")
+            res.append(cls.process_runner(r))
+        return BenchmarkResult(res)
+
+    @classmethod
+    @overtake(runtime_type_checker='beartype')
+    def compare(cls, *args, **kwargs):
+        ...
 
     def print_results(self, sort_by: tp.Callable = None, name="RESULTS"):
         print(name)
@@ -52,14 +70,11 @@ class BenchmarkResult:
         return str(self.results)
 
     @classmethod
-    def process_runner(cls, runner_tp: tp.Type[AbstractRunner], params: tp.Dict):
-        # noinspection PyArgumentList
-        runner = runner_tp(**params)
-
+    def process_runner(cls, runner: AbstractRunner):
         res = cls._run(runner)
         return res
 
-    def top(self, *fields: str, silent: bool = False, total=True):
+    def top(self, *fields: str, silent: bool = False, total=False):
         score = defaultdict(int)
         for f in fields:
             sort_by = lambda r: getattr(r, f)
@@ -92,6 +107,7 @@ class BenchmarkResult:
         )
 
     @classmethod
+    @overload
     def series(cls, runners: tp.Iterable[tp.Type[AbstractRunner]], params_it: tp.Iterable[dict]) \
             -> tp.List['BenchmarkResult']:
         res = []
@@ -99,6 +115,21 @@ class BenchmarkResult:
             print(f"running experiment {i + 1}")
             res.append(cls.compare(runners, p))
         return res
+
+    @classmethod
+    @overload
+    def series(cls, runners: tp.Iterable[tp.Iterable[AbstractRunner]]) \
+            -> tp.List['BenchmarkResult']:
+        res = []
+        for i, rs in enumerate(runners):
+            print(f"running experiment {i + 1}")
+            res.append(cls.compare(rs))
+        return res
+
+    @classmethod
+    @overtake(runtime_type_checker='beartype')
+    def series(cls, *args, **kwargs):
+        ...
 
     @classmethod
     def variate(cls, runners: tp.Iterable[tp.Type[AbstractRunner]], params: tp.Dict, param_name: str,
@@ -142,50 +173,13 @@ class BenchmarkResult:
         plt.show()
 
 
-def main():
-    def f(x: float, y: float) -> float:
-        # return x ** 3 * y ** 5 * (4 - x - 7 * y)
-        # return scipy.optimize.rosen((x, y))
-        return (x - 1) ** 2 + y ** 2
-        # return x ** 2 + y ** 2
-
-        # TARGET = Vector(4 / 3, 20 / 63)
-
-    TARGET = Vector(1, 0)
-    PROBLEM = Oracle(f, TARGET)
-    b = BenchmarkResult.compare(RunnerMeta.runners, dict(
-        o=PROBLEM,
-        start=Vector(2, 1),
-        a=Coef.CONST(0.0001),
-        exit_condition=ExitCondition.NORM(Metric.EUCLID, 0.00001)
-    ))
-    # b.print_results(sort_by=lambda el: el.queries, name="sorted by queries")
-    # b.print_results(sort_by=lambda el: el.accuracy, name="sorted by accuracy")
-    # b.print_results(sort_by=lambda el: el.time, name="sorted by time")
-
-    # b.top("accuracy", "time", "queries")
-
-
-def main2():
-    def f(x: float, y: float) -> float:
-        # return x ** 3 * y ** 5 * (4 - x - 7 * y)
-        # return scipy.optimize.rosen((x, y))
-        return (x - 1) ** 2 + y ** 2
-        # return x ** 2 + y ** 2
-
-        # TARGET = Vector(4 / 3, 20 / 63)
-
-    TARGET = Vector(1, 0)
-    PROBLEM = Oracle(f, TARGET)
-    # (GradientDescendRunner, CoordinateGradientRunner)
-    bs = BenchmarkResult.variate(RunnerMeta.runners, dict(
-        o=PROBLEM,
-        a=Coef.CONST(0.0001),
-        exit_condition=ExitCondition.NORM(Metric.EUCLID, 0.00001)
-    ), "start", (Vector(2, 1), Vector(2, 2), Vector(2, 3),))
-
-    BenchmarkResult.plot_results(bs, ("queries", "accuracy", "time", "top"), names=["1", "2", "3"])
-
-
 if __name__ == '__main__':
-    main2()
+    def f(x: float, y: float) -> float:
+        return (x - 1) ** 2 + y ** 2
+
+
+    TARGET = Vector(1, 0)
+    PROBLEM = Oracle(f, TARGET)
+    runners = list(map(lambda r: r(PROBLEM, Vector(3, 3)), RunnerMeta.runners))
+
+    b = BenchmarkResult.compare(runners)

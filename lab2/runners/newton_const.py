@@ -1,4 +1,4 @@
-from common.utils import AbstractRunner, ExitCondition, Oracle
+from common.utils import AbstractRunner, ExitCondition, Oracle, Options
 from common.utils import Vector
 from common.utils import Metric
 from numpy.linalg import inv
@@ -9,18 +9,13 @@ from lab2.runners.grad import grad, grad2, newton_dir
 
 
 @dataclasses.dataclass
-class NewtonConstOptions:
+class NewtonConstOptions(Options):
     learning_rate: float = 1
-    exit_condition_diff: float = 0.01
     grad_delta: float = 0.001
 
 
 class NewtonConstRunner(AbstractRunner):
     opts: NewtonConstOptions
-
-    def __init__(self, o: Oracle, start: Vector, opts: NewtonConstOptions):
-        super().__init__(o, start)
-        self.opts = opts
 
     def grad(self, p: np.ndarray) -> np.ndarray:
         return grad(self.o.f, p, self.opts.grad_delta)
@@ -36,6 +31,8 @@ class NewtonConstRunner(AbstractRunner):
         cur = np.array(start.coords)
         while True:
             cur = cur + self.sk(cur) * self.opts.learning_rate
-            if np.linalg.norm(prev - cur) < self.opts.exit_condition_diff:
+            if self.opts.exit_condition(prev, cur):
                 break
             prev = cur
+
+

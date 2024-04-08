@@ -1,4 +1,4 @@
-from common.utils import AbstractRunner, ExitCondition, Oracle, PlotConfig
+from common.utils import AbstractRunner, ExitCondition, Oracle, PlotConfig, Options
 from common.utils import Vector
 from common.utils import Metric
 from numpy.linalg import inv
@@ -6,14 +6,7 @@ import numpy as np
 import dataclasses
 import typing as tp
 
-from lab2.runners.newton_const import NewtonConstRunner
-
-
-@dataclasses.dataclass
-class NewtonConstOptions:
-    learning_rate: float = 1
-    exit_condition_diff: float = 0.01
-    grad_delta: float = 0.001
+from lab2.runners.newton_const import NewtonConstRunner, NewtonConstOptions
 
 
 def search_up(f: tp.Callable[[float], float]):
@@ -46,14 +39,11 @@ def trinary_search(f: tp.Callable[[float], float], x_max: float, iterations: int
 @dataclasses.dataclass
 class NewtonSearchOptions(NewtonConstOptions):
     search_max: float = 10
-    search_iterations: float = 10
+    search_iterations: int = 10
 
 
 class NewtonSearchRunner(NewtonConstRunner):
     opts: NewtonSearchOptions
-
-    def __init__(self, o: Oracle, start: Vector, opts: NewtonSearchOptions):
-        super().__init__(o, start, opts)
 
     def _run(self, start: Vector, *args, **kwargs):
         prev = np.array(start.coords)
@@ -63,10 +53,11 @@ class NewtonSearchRunner(NewtonConstRunner):
 
             def f(a: float):
                 return self.o.f(*(cur + sk * a))
-            cur = cur + self.sk(cur) *\
-                trinary_search(f, self.opts.search_max,
-                               self.opts.search_iterations)
 
-            if np.linalg.norm(prev - cur) < self.opts.exit_condition_diff:
+            cur = cur + self.sk(cur) * \
+                  trinary_search(f, self.opts.search_max,
+                                 self.opts.search_iterations)
+
+            if self.opts.exit_condition(prev, cur):
                 break
             prev = cur

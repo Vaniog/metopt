@@ -47,9 +47,6 @@ def wolfe_search(f, x: np.ndarray, s: np.ndarray, opts: WolfeOptions) -> float:
 class WolfeRunner(NewtonConstRunner):
     opts: WolfeOptions
 
-    def __init__(self, o: Oracle, start: Vector, opts: WolfeOptions):
-        super().__init__(o, start, opts)
-
     def _run(self, start: Vector, *args, **kwargs):
         prev = np.array(start.coords)
         cur = np.array(start.coords)
@@ -57,8 +54,8 @@ class WolfeRunner(NewtonConstRunner):
             sk = self.sk(cur)
 
             cur = cur + self.sk(cur) * \
-                wolfe_search(self.o.f, cur, sk, self.opts)
+                  wolfe_search(self.o.f, cur, sk, self.opts)
 
-            if np.linalg.norm(prev - cur) < self.opts.exit_condition_diff:
+            if self.opts.exit_condition(prev, cur):
                 break
             prev = cur
