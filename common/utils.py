@@ -198,6 +198,7 @@ class Oracle:
         self.steps = []
 
     def dec(self, f: tp.Callable):
+        @lru_cache
         @wraps(f)
         def inner(v: Vector, *args) -> float:
             if not isinstance(v, (Vector, list, tuple)):
