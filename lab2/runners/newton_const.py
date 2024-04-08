@@ -5,6 +5,8 @@ from numpy.linalg import inv
 import numpy as np
 import dataclasses
 
+from lab2.runners.grad import grad, grad2, newton_dir
+
 
 @dataclasses.dataclass
 class NewtonConstOptions:
@@ -21,34 +23,13 @@ class NewtonConstRunner(AbstractRunner):
         self.opts = opts
 
     def grad(self, p: np.ndarray) -> np.ndarray:
-        ds = []
-
-        fp = self.o.f(*p)
-        for i, _ in enumerate(p):
-            coords = [*p]
-            coords[i] += self.opts.grad_delta
-            ds.append(self.o.f(*coords) - fp)
-
-        res = np.array(list(map(lambda el: el / self.opts.grad_delta, ds)))
-        return res
+        return grad(self.o.f, p, self.opts.grad_delta)
 
     def grad2(self, p: np.ndarray) -> np.ndarray:
-        dgs: np.ndarray = []
-
-        gp = self.grad(p)
-        for i, _ in enumerate(p):
-            coords = [*p]
-            coords[i] += self.opts.grad_delta
-            dgs.append(self.grad(np.array(coords)) - gp)
-
-        res = np.array(
-            list(map(lambda el: el * (1 / self.opts.grad_delta), dgs)))
-        return res
+        return grad2(self.o.f, p, self.opts.grad_delta)
 
     def sk(self, p: np.ndarray) -> np.ndarray:
-        grad2inv = inv(self.grad2(p))
-        a = grad2inv @ self.grad(p)
-        return -a
+        return newton_dir(self.o.f, p, self.opts.grad_delta)
 
     def _run(self, start: Vector, *args, **kwargs):
         prev = np.array(start.coords)
