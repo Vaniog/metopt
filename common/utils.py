@@ -198,14 +198,19 @@ class Oracle:
         self.steps = []
 
     def dec(self, f: tp.Callable):
-        @lru_cache
+        f = lru_cache(f)
+
         @wraps(f)
         def inner(v: Vector, *args) -> float:
-            if not isinstance(v, (Vector, list, tuple)):
-                v = Vector(*((v,) + args))
-            elif isinstance(v, np.ndarray):
+            if isinstance(v, np.ndarray):
                 v = Vector(*v)
-            r = f(*v)
+            elif not isinstance(v, (Vector, list, tuple)):
+                v = Vector(*((v,) + args))
+
+            try:
+                r = f(*v)
+            except TypeError:
+                r = f.__wrapped__(*v)
             self.steps.append(Step(v, r))
             return r
 
