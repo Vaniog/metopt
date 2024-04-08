@@ -30,7 +30,10 @@ class Vector(tp.Iterable):
     def __getitem__(self, item):
         return self.coords[item]
 
-    def assert_equal_dim(self, other: 'Vector'):
+    def ndarray(self) -> np.ndarray:
+        return np.array(self.coords)
+
+    def assert_equal_dim(self, other):
         if self.dim != other.dim:
             raise Exception(f"unable to perform operation on vectors with dim {self.dim} and {other.dim}")
 
@@ -195,8 +198,10 @@ class Oracle:
     def dec(self, f: tp.Callable):
         @wraps(f)
         def inner(v: Vector, *args) -> float:
-            if not isinstance(v, Vector):
+            if not isinstance(v, (Vector, list, tuple, np.ndarray)):
                 v = Vector(*((v,) + args))
+            elif isinstance(v, np.ndarray):
+                v = Vector(*v)
             r = f(*v)
             self.steps.append(Step(v, r))
             return r
@@ -206,8 +211,8 @@ class Oracle:
 
 @dataclass
 class PlotConfig:
-    linspace_start: float
-    linspace_stop: float
+    linspace_start: float = -5
+    linspace_stop: float = 5
     linspace_num: int = 30
     func_lines_num: int = 150
     dpi: int = 1000
@@ -286,7 +291,7 @@ class AbstractRunner(abc.ABC, metaclass=RunnerMeta):
         self.o.steps = []
         return res, end - st
 
-    def experiment(self, log=False, points=None, plt_cfg: PlotConfig = None):
+    def experiment(self, log=False, points=100, plt_cfg: PlotConfig = None):
         """
 
         :param log: если True, будут выводиться все шаги по ходу выполнения программы
@@ -294,6 +299,8 @@ class AbstractRunner(abc.ABC, metaclass=RunnerMeta):
         :param plt_cfg: конфигурация графика
         """
         self._log = log
+        if not plt_cfg:
+            plt_cfg = PlotConfig()
         res, time = self.run()
         acc = res.accuracy(self.o.target)
         print(
