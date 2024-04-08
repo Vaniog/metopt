@@ -267,7 +267,11 @@ class AbstractRunner(abc.ABC, metaclass=RunnerMeta):
 
     start: Vector
 
-    _log: bool = False
+    def __post_init__(self):
+        self._log = False
+
+    def set_log(self, log: bool):
+        self._log = log
 
     @abc.abstractmethod
     def _run(self, start: Vector, *args, **kwargs):
