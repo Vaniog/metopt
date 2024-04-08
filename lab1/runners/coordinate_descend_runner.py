@@ -1,4 +1,4 @@
-from .utils import *
+from common.utils import *
 
 
 class Direction:
@@ -18,7 +18,7 @@ class Direction:
         self._v_i = (self._v_i + 1) % (self._dim * 2)
 
 
-class CoordinateDescendRunner(AbstractRunner):
+class CoordinateDescendRunner(OldRunner):
     dim: int
     direction: Direction
     step = 1

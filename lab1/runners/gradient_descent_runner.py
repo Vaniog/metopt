@@ -1,7 +1,7 @@
-from .utils import *
+from common.utils import *
 
 
-class GradientDescendRunner(AbstractRunner):
+class GradientDescendRunner(OldRunner):
     @staticmethod
     def grad(f: tp.Callable[[Vector], float], p: Vector, delta: float) -> Vector:
         ds = []

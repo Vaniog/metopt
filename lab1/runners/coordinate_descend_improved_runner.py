@@ -1,8 +1,8 @@
-from .utils import *
+from common.utils import *
 from .coordinate_descend_runner import Direction
 
 
-class CoordinateDescendImprovedRunner(AbstractRunner):
+class CoordinateDescendImprovedRunner(OldRunner):
     direction: Direction
     step = 1
     step_min = 0.000001

@@ -3,6 +3,7 @@ import dataclasses
 import inspect
 import math
 import typing as tp
+from abc import ABC
 from dataclasses import dataclass
 from functools import wraps, lru_cache
 from timeit import default_timer as timer
@@ -265,27 +266,16 @@ class AbstractRunner(abc.ABC, metaclass=RunnerMeta):
     o: Oracle
 
     start: Vector
-    a: tp.Generator
-    exit_condition: ExitCondition.tp
 
     _log: bool = False
 
     @abc.abstractmethod
-    def _step(self, point: Vector, ak: float) -> tp.Tuple[Step, Vector]:
-        raise NotImplementedError()
-
-    def _run(self, start: Vector, a: tp.Generator, exit_condition: ExitCondition.tp):
-        it, next_point = self._step(start, next(a))
-        steps = [it]  # тут храним все шаги программы
-        while True:
-            it, next_point = self._step(next_point, next(a))  # шагаем
-            steps.append(it)
-            if exit_condition(steps[-2], steps[-1]):  # На основании 2х последних шагов решаем, пора ли заканчивать
-                break
+    def _run(self, start: Vector, *args, **kwargs):
+        raise NotImplemented()
 
     def run(self) -> tp.Tuple[Result, float]:
         st = timer()
-        self._run(self.start, self.a, self.exit_condition)
+        self._run(self.start)
         end = timer()
 
         res = Result(self.o.steps)
@@ -373,7 +363,31 @@ class AbstractRunner(abc.ABC, metaclass=RunnerMeta):
         ax.set_zlabel('z')
 
 
-def plot(objective):
+class OldRunner(AbstractRunner, ABC):
+    a: tp.Generator
+    exit_condition: ExitCondition.tp
+
+    def __init__(self, o: Oracle, start: Vector, a: tp.Generator, exit_condition: ExitCondition.tp):
+        self.o = o
+        self.start = start
+        self.a = a
+        self.exit_condition = exit_condition
+
+    @abc.abstractmethod
+    def _step(self, point: Vector, ak: float) -> tp.Tuple[Step, Vector]:
+        raise NotImplementedError()
+
+    def _run(self, start: Vector, *args, **kwargs):
+        it, next_point = self._step(start, next(self.a))
+        steps = [it]  # тут храним все шаги программы
+        while True:
+            it, next_point = self._step(next_point, next(self.a))  # шагаем
+            steps.append(it)
+            if self.exit_condition(steps[-2], steps[-1]):  # На основании 2х последних шагов решаем, пора ли заканчивать
+                break
+
+
+def plot(objective: tp.Callable[[float, float], float]):
     # define range for input
     r_min, r_max = -10.0, 10.0
     # sample input range uniformly at 0.1 increments
@@ -387,5 +401,6 @@ def plot(objective):
     figure = plt.figure()
     axis = plt.axes(projection='3d')
     axis.plot_surface(x, y, results, cmap='jet')
+    axis.set_title(objective.__name__)
     # show the plot
     plt.show()

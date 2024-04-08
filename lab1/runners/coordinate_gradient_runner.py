@@ -1,5 +1,4 @@
-from .utils import *
-from scipy.optimize import minimize
+from common.utils import *
 import typing as tp
 from .gradient_descent_runner import GradientDescendRunner
 
@@ -31,7 +30,7 @@ def trinary_search(f: tp.Callable[[float], float], x_max: float, iterations: int
     return lb
 
 
-class CoordinateGradientRunner(AbstractRunner):
+class CoordinateGradientRunner(OldRunner):
     last_step = None
 
     def _step(self, point: Vector, ak: float) -> tp.Tuple[Step, Vector]:
