@@ -292,12 +292,15 @@ class RunnerMeta(abc.ABCMeta, type):
 
 @dataclass
 class Options:
-    exit_condition_threshold: float = 0.01
-    exit_condition: ExitCondition.tp = dataclasses.field(default=None, repr=False)
+    exit_condition_threshold: float = dataclasses.field(default=0.01, metadata={"fixed": True})
+    exit_condition: ExitCondition.tp = dataclasses.field(default=None, repr=False, metadata={"fixed": True})
 
     def __post_init__(self):
         if not self.exit_condition:
             self.exit_condition = ExitCondition.NORM(Metric.EUCLID, self.exit_condition_threshold)
+
+    def validate(self):
+        return 0 < self.exit_condition_threshold < 1
 
     @classmethod
     def default(cls, override: dict = None):
@@ -494,41 +497,3 @@ def plot(objective: tp.Callable[[float, float], float]):
     axis.set_title(objective.__name__)
     # show the plot
     plt.show()
-
-
-class TimeoutError(Exception):
-    def __init__(self, value="Timed Out"):
-        self.value = value
-
-    def __str__(self):
-        return repr(self.value)
-
-
-def timeout(seconds):
-    def decorate(f):
-        if platform.system() == "Windows":
-            print("WARNING: timout decorator is not work on under windows")
-            return f
-
-        def handler(signum, frame):
-            raise TimeoutError()
-
-        def new_f(*args, **kwargs):
-            old = signal.signal(signal.SIGALRM, handler)
-            old_time_left = signal.alarm(seconds)
-            if 0 < old_time_left < seconds:
-                signal.alarm(old_time_left)
-            start_time = time.time()
-            try:
-                result = f(*args, **kwargs)
-            finally:
-                if old_time_left > 0:  # deduct f's run time from the saved timer
-                    old_time_left -= time.time() - start_time
-                signal.signal(signal.SIGALRM, old)
-                signal.alarm(old_time_left)
-            return result
-
-        new_f.__name__ = f.__name__
-        return new_f
-
-    return decorate

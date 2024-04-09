@@ -13,6 +13,13 @@ class NewtonConstOptions(Options):
     learning_rate: float = 1
     grad_delta: float = 0.001
 
+    def validate(self):
+        return all((
+            0 < self.learning_rate,
+            0 < self.grad_delta,
+            super().validate(),
+        ))
+
 
 class NewtonConstRunner(AbstractRunner):
     opts: NewtonConstOptions
@@ -34,5 +41,3 @@ class NewtonConstRunner(AbstractRunner):
             if self.opts.exit_condition(prev, cur):
                 break
             prev = cur
-
-
