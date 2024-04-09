@@ -11,7 +11,6 @@ from lab2.runners.newton_const import NewtonConstOptions, NewtonConstRunner
 
 @dataclasses.dataclass
 class WolfeOptions(NewtonConstOptions):
-    grad_delta: float = 0.001
     eps_armijo: float = 0.5
     eps_curvature: float = 0.75
 

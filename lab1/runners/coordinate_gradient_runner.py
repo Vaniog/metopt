@@ -32,6 +32,7 @@ def trinary_search(f: tp.Callable[[float], float], x_max: float, iterations: int
 
 class CoordinateGradientRunner(OldRunner):
     last_step = None
+    opts: OldOptions
 
     def _step(self, point: Vector, ak: float) -> tp.Tuple[Step, Vector]:
         z = self.o.f(point)

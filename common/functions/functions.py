@@ -11,7 +11,7 @@ class __TupleWithSize(tuple):
         return len(self)
 
 
-def _decorate(f):
+def _decorate(f, dim):
     inner_call = f.__call__
 
     def my_call(self, *args):
@@ -22,9 +22,13 @@ def _decorate(f):
         else:
             return inner_call(__TupleWithSize(args))
 
+    def target():
+        return Vector(*f.x_best)
+
     type(f).__call__ = my_call
     f.__name__ = f.__class__.__name__
-    f.target = lambda self: Vector(*self.x_best)
+    f.target = target
+    f.dim = dim
     return f
 
 
@@ -33,7 +37,7 @@ def _from_lib(dim: int) -> tuple:
     res = []
     for f in filter(lambda x: isinstance(x, type), locals().values()):
         func = f(dim)
-        res.append(_decorate(func))
+        res.append(_decorate(func, dim))
     return tuple(res)
 
 

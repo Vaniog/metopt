@@ -6,11 +6,13 @@ import typing as tp
 from tabulate import tabulate
 from matplotlib import pyplot as plt
 import matplotlib.colors as mcolors
+from timeout_decorator import timeout_decorator
 from typing_extensions import overload
-from overtake import overtake
 from lab2.runners import *
 
 from common.utils import *
+
+MAX_INT = 10 ** 9
 
 
 class BenchmarkResult:
@@ -71,7 +73,15 @@ class BenchmarkResult:
 
     @classmethod
     def process_runner(cls, runner: AbstractRunner):
-        res = cls._run(runner)
+        try:
+            res = cls._run(runner)
+        except Exception as e:
+            res = cls.ExperimentResult(
+                runner.__class__.__name__,
+                MAX_INT,
+                MAX_INT,
+                MAX_INT
+            )
         return res
 
     def top(self, *fields: str, silent: bool = False, total=False):
@@ -95,6 +105,7 @@ class BenchmarkResult:
             return score
 
     @classmethod
+    @timeout_decorator.timeout(1)
     def _run(cls, runner: AbstractRunner) -> ExperimentResult:
         res, time = runner.run()
         acc = res.accuracy(runner.o.target)

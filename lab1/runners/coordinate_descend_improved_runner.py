@@ -6,6 +6,7 @@ class CoordinateDescendImprovedRunner(OldRunner):
     direction: Direction
     step = 1
     step_min = 0.000001
+    opts: OldOptions
 
     def _try_step(self, point: Vector) -> tp.Tuple[Vector, bool]:
         self.dim = point.dim

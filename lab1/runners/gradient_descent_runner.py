@@ -2,6 +2,7 @@ from common.utils import *
 
 
 class GradientDescendRunner(OldRunner):
+    opts: OldOptions
     @staticmethod
     def grad(f: tp.Callable[[Vector], float], p: Vector, delta: float) -> Vector:
         ds = []
