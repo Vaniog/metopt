@@ -105,7 +105,6 @@ class BenchmarkResult:
             return score
 
     @classmethod
-    @timeout_decorator.timeout(1)
     def _run(cls, runner: AbstractRunner) -> ExperimentResult:
         res, time = runner.run()
         acc = res.accuracy(runner.o.target)

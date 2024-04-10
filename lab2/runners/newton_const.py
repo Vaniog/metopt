@@ -10,8 +10,8 @@ from lab2.runners.grad import grad, grad2, newton_dir
 
 @dataclasses.dataclass
 class NewtonConstOptions(Options):
-    learning_rate: float = 1
-    grad_delta: float = 0.001
+    learning_rate: float = dataclasses.field(default=1, metadata={"bounds": (0, 2)})
+    grad_delta: float = dataclasses.field(default=0.001, metadata={"bounds": (0, 0.1)})
 
     def validate(self):
         return all((
@@ -36,7 +36,7 @@ class NewtonConstRunner(AbstractRunner):
     def _run(self, start: Vector, *args, **kwargs):
         prev = np.array(start.coords)
         cur = np.array(start.coords)
-        while True:
+        while self.running():
             cur = cur + self.sk(cur) * self.opts.learning_rate
             if self.opts.exit_condition(prev, cur):
                 break

@@ -19,7 +19,36 @@ import matplotlib as mtl
 from overtake import overtake
 from typing_extensions import overload
 
-Vector2D = tp.Tuple[float, float]
+
+# class _Running:
+#     __timeout: float
+#     __start_time: float
+#
+#     def __init__(self):
+#         self.__timeout = -1
+#         self.__start_time = -1
+#
+#     def start(self):
+#         if self.__start_time != -1:
+#             raise Exception("Another instance is running")
+#         self.__start_time = timer()
+#
+#     def stop(self):
+#         res = timer() - self.__start_time
+#         self.__start_time = -1
+#         return res
+#
+#     def set_timeout(self, t):
+#         self.__timeout = t
+#
+#     def __call__(self, *args, **kwargs):
+#         if timer() - self.__start_time > self.__timeout:
+#             print("TIMEOUT")
+#             raise TimeoutError()
+#         return True
+#
+#
+# running = _Running()
 
 
 class Vector(tp.Iterable):
@@ -292,7 +321,7 @@ class RunnerMeta(abc.ABCMeta, type):
 
 @dataclass
 class Options:
-    exit_condition_threshold: float = dataclasses.field(default=0.01, metadata={"fixed": True})
+    exit_condition_threshold: float = dataclasses.field(default=0.001, metadata={"fixed": True})
     exit_condition: ExitCondition.tp = dataclasses.field(default=None, repr=False, metadata={"fixed": True})
 
     def __post_init__(self):
@@ -308,6 +337,12 @@ class Options:
             return cls(**override)
         return cls()
 
+    def copy(self, **kwargs):
+        d = dataclasses.asdict(self)
+        d.update(kwargs)
+        # noinspection PyArgumentList
+        return type(self)(**d)
+
 
 class AbstractRunner(abc.ABC, metaclass=RunnerMeta):
     """
@@ -318,6 +353,9 @@ class AbstractRunner(abc.ABC, metaclass=RunnerMeta):
     o: Oracle
     start: Vector
     opts: Options
+
+    TIMEOUT: float = 1
+    __start_time: float = -1
 
     def __init__(self, o: Oracle, start: Vector, opts: Options | None = None, override_opts: dict | None = None):
         self.o = o
@@ -344,8 +382,14 @@ class AbstractRunner(abc.ABC, metaclass=RunnerMeta):
     def _run(self, start: Vector, *args, **kwargs):
         raise NotImplemented()
 
+    def running(self):
+        if timer() - self.__start_time > self.TIMEOUT:
+            raise TimeoutError("timeout")
+        return True
+
     def run(self) -> tp.Tuple[Result, float]:
         st = timer()
+        self.__start_time = st
         self._run(self.start)
         end = timer()
 

@@ -38,8 +38,8 @@ def trinary_search(f: tp.Callable[[float], float], x_max: float, iterations: int
 
 @dataclasses.dataclass
 class NewtonSearchOptions(NewtonConstOptions):
-    search_max: float = 10
-    search_iterations: int = 10
+    search_max: float = dataclasses.field(default=10, metadata={"bounds": (5, 15)})
+    search_iterations: int = dataclasses.field(default=10, metadata={"bounds": (5, 15)})
 
 
 class NewtonSearchRunner(NewtonConstRunner):
@@ -48,7 +48,7 @@ class NewtonSearchRunner(NewtonConstRunner):
     def _run(self, start: Vector, *args, **kwargs):
         prev = np.array(start.coords)
         cur = np.array(start.coords)
-        while True:
+        while self.running():
             sk = self.sk(cur)
 
             def f(a: float):

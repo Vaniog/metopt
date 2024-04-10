@@ -19,7 +19,7 @@ class Base(abc.ABC):
     def call(self, *args):
         ...
 
-    def target(self):
+    def target(self) -> Vector:
         return Vector(*self.x_best)
 
     def __call__(self, *args, **kwargs):
