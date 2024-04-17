@@ -1,6 +1,7 @@
 import dataclasses
 
 import numpy as np
+from numpy.linalg import norm
 
 from common.utils import Vector
 from lab2.runners.grad import grad
@@ -9,13 +10,14 @@ from lab2.runners.newton_const import NewtonConstOptions, NewtonConstRunner
 
 @dataclasses.dataclass
 class WolfeOptions(NewtonConstOptions):
-    eps_armijo: float = 0.5
-    eps_curvature: float = 0.75
+    eps_armijo: float = dataclasses.field(default=0.5, metadata={"fixed": True})
+    eps_curvature: float = dataclasses.field(default=0.75, metadata={"fixed": True})
 
-    a0: float = 1
-    teta_armija: float = 0.9
+    a0: float = dataclasses.field(default=1, metadata={"fixed": True})
+    teta_armija: float = dataclasses.field(default=0.9, metadata={"fixed": True})
 
-    search_iterations: int = 10
+    search_iterations: float = dataclasses.field(default=0.5, metadata={"bounds": (0, 0.001)})
+    # acc: float = dataclasses.field(default=3, metadata={"bounds": (0, 5)})
 
     def validate(self):
         return all((
@@ -44,7 +46,7 @@ class WolfeRunner(NewtonConstRunner):
         steps = 0
         while self.running():
             steps += 1
-            if steps >= opts.search_iterations:
+            if steps >= opts.search_iterations * 30000:
                 return a
             if not armijo(a):
                 a *= opts.teta_armija

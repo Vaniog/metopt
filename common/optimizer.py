@@ -5,7 +5,7 @@ from itertools import chain
 from statistics import mean
 
 import numpy as np
-from scipy.optimize import minimize
+from scipy.optimize import minimize, least_squares
 
 from common.benchmark import BenchmarkResult, MAX_INT
 from common.functions import custom
@@ -48,7 +48,7 @@ def construct_func(runner_type: tp.Type[AbstractRunner],
             print("incorrect options")
             return MAX_INT
         res = []
-        for func in custom():
+        for func in functions(exclude=["Abs", 'Stairs']):
             res.append(_attempt(runner_type, func, options))
         error = error_function(chain(*res))
         print(f"--error: {error}")
@@ -77,12 +77,20 @@ def optimize_params(runner_type: tp.Type[AbstractRunner],
     def arr_from_opts(opts: Options):
         return np.array([getattr(opts, k) for k, _ in sorted(fields.items())])
 
+    bds = (
+        list((f.metadata.get("bounds")[0] for _, f in sorted(fields.items()))),
+        list((f.metadata.get("bounds")[1] for _, f in sorted(fields.items())))
+    )
+    print(bds)
+    m = least_squares(f, arr_from_opts(start),
+                      bounds=bds,
+                      xtol=tol,
 
-    m = minimize(f, arr_from_opts(start),
-                 bounds=(f.metadata.get("bounds") for _, f in sorted(fields.items())),
-                 tol=tol)
+                      )
     print(m)
+
     return construct_options(m["x"]), m["fun"]
+
     # r = GradientDescendRunner(Oracle(f, None), Vector(*arr_from_opts(start)), OldOptions(
     #     exit_condition=lambda st1, st2: st2.z != 10 ** 9 and ExitCondition.DELTA(tol)(st1, st2),
     #     a=Coef.GEOMETRIC_PROGRESSION(0.1, 0.9999)
@@ -115,9 +123,9 @@ def _attempt(runner: tp.Type[AbstractRunner], func, opts: Options, attempts=1):
 
 if __name__ == '__main__':
     m = optimize_params(
-        NewtonSearchRunner,
+        WolfeRunner,
         ErrorFunction.accuracy,
-        tol=0.001
+        tol=0.0001
     )
     print(m)
 # (NewtonSearchOptions(exit_condition_threshold=0.001, learning_rate=1.0000020137389727, grad_delta=0.0009998425454368135, search_max=10.000007937496651, search_iterations=10), 1.586603032594329)
