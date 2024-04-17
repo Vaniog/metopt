@@ -41,11 +41,12 @@ def _from_lib(dim: int) -> tuple:
     return tuple(res)
 
 
-def functions(dim: int = 2):
-    return _from_lib(dim) + custom(dim)
+def functions(dim: int = 2, exclude: list = None):
+    if not exclude:
+        exclude = []
+    return list(filter(lambda f: f.__name__ not in exclude, _from_lib(dim) + custom(dim)))
 
 
 if __name__ == '__main__':
     for f in functions():
         plot_3d(f, title=f.__name__)
-        print(f(2, 3))

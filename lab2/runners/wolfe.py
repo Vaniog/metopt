@@ -1,10 +1,8 @@
-import math
-from common.utils import AbstractRunner, ExitCondition, Oracle, PlotConfig
-from common.utils import Vector
-from numpy.linalg import inv
-import numpy as np
 import dataclasses
-import typing as tp
+
+import numpy as np
+
+from common.utils import Vector
 from lab2.runners.grad import grad
 from lab2.runners.newton_const import NewtonConstOptions, NewtonConstRunner
 
@@ -16,6 +14,8 @@ class WolfeOptions(NewtonConstOptions):
 
     a0: float = 1
     teta_armija: float = 0.9
+
+    search_iterations: int = 10
 
     def validate(self):
         return all((
@@ -41,7 +41,11 @@ class WolfeRunner(NewtonConstRunner):
         a = opts.a0
         teta_curvature = (1 + 1 / opts.teta_armija) / 2
 
+        steps = 0
         while self.running():
+            steps += 1
+            if steps >= opts.search_iterations:
+                return a
             if not armijo(a):
                 a *= opts.teta_armija
                 continue
