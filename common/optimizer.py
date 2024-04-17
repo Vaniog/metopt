@@ -5,7 +5,7 @@ from itertools import chain
 from statistics import mean
 
 import numpy as np
-from scipy.optimize import minimize, least_squares
+from scipy.optimize import minimize, least_squares, brute
 
 from common.benchmark import BenchmarkResult, MAX_INT
 from common.functions import custom
@@ -77,19 +77,16 @@ def optimize_params(runner_type: tp.Type[AbstractRunner],
     def arr_from_opts(opts: Options):
         return np.array([getattr(opts, k) for k, _ in sorted(fields.items())])
 
-    bds = (
-        list((f.metadata.get("bounds")[0] for _, f in sorted(fields.items()))),
-        list((f.metadata.get("bounds")[1] for _, f in sorted(fields.items())))
-    )
+    # bds = (
+    #     list((f.metadata.get("bounds")[0] for _, f in sorted(fields.items()))),
+    #     list((f.metadata.get("bounds")[1] for _, f in sorted(fields.items())))
+    # )
+    bds = list((f.metadata.get("bounds") for _, f in sorted(fields.items())))
     print(bds)
-    m = least_squares(f, arr_from_opts(start),
-                      bounds=bds,
-                      xtol=tol,
-
-                      )
+    m = brute(f, bds, Ns=5)
     print(m)
 
-    return construct_options(m["x"]), m["fun"]
+    return construct_options(m)
 
     # r = GradientDescendRunner(Oracle(f, None), Vector(*arr_from_opts(start)), OldOptions(
     #     exit_condition=lambda st1, st2: st2.z != 10 ** 9 and ExitCondition.DELTA(tol)(st1, st2),

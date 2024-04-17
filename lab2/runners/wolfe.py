@@ -10,13 +10,13 @@ from lab2.runners.newton_const import NewtonConstOptions, NewtonConstRunner
 
 @dataclasses.dataclass
 class WolfeOptions(NewtonConstOptions):
-    eps_armijo: float = dataclasses.field(default=0.5, metadata={"fixed": True})
-    eps_curvature: float = dataclasses.field(default=0.75, metadata={"fixed": True})
+    eps_armijo: float = dataclasses.field(default=0.5, metadata={"bounds": (0, 1)})
+    eps_curvature: float = dataclasses.field(default=0.75, metadata={"bounds": (0, 1)})
 
-    a0: float = dataclasses.field(default=1, metadata={"fixed": True})
-    teta_armija: float = dataclasses.field(default=0.9, metadata={"fixed": True})
+    a0: float = dataclasses.field(default=1, metadata={"bounds": (0, 1)})
+    teta_armija: float = dataclasses.field(default=0.9, metadata={"bounds": (0, 1)})
 
-    search_iterations: float = dataclasses.field(default=0.5, metadata={"bounds": (0, 0.001)})
+    search_iterations: float = dataclasses.field(default=0.5, metadata={"bounds": (0, 1)})
     # acc: float = dataclasses.field(default=3, metadata={"bounds": (0, 5)})
 
     def validate(self):
@@ -25,7 +25,7 @@ class WolfeOptions(NewtonConstOptions):
             #     я помню что тут кто-то должен быть меньше кого-то,
             #     но кто есть кто, я не помню
         ))
-
+# WolfeOptions(exit_condition_threshold=0.001, learning_rate=1, grad_delta=0.001, eps_armijo=0.00018576569900265817, eps_curvature=0.8941550352184215, a0=0.2651735328477399, teta_armija=0.40125631563010494, search_iterations=0.9628174281615451)
 
 class WolfeRunner(NewtonConstRunner):
     opts: WolfeOptions
@@ -46,7 +46,7 @@ class WolfeRunner(NewtonConstRunner):
         steps = 0
         while self.running():
             steps += 1
-            if steps >= opts.search_iterations * 30000:
+            if steps >= opts.search_iterations * 20:
                 return a
             if not armijo(a):
                 a *= opts.teta_armija
