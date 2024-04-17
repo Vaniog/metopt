@@ -541,3 +541,44 @@ def plot(objective: tp.Callable[[float, float], float]):
     axis.set_title(objective.__name__)
     # show the plot
     plt.show()
+
+def plot(objective: tp.Callable[[float, float], float]):
+    # define range for input
+    r_min, r_max = -10.0, 10.0
+    # sample input range uniformly at 0.1 increments
+    xaxis = np.arange(r_min, r_max, 0.1)
+    yaxis = np.arange(r_min, r_max, 0.1)
+    # create a mesh from the axis
+    x, y = np.meshgrid(xaxis, yaxis)
+    # compute targets
+    results = objective(x, y)
+    # create a surface plot with the jet color scheme
+    figure = plt.figure()
+    axis = plt.axes(projection='3d')
+    axis.plot_surface(x, y, results, cmap='jet')
+    axis.set_title(objective.__name__)
+    # show the plot
+    plt.show()
+
+
+def plot_2d(objective: tp.Callable[[float], float]):
+    # Определяем диапазон для входных значений
+    r_min, r_max = -10.0, 10.0
+    # Генерируем входные значения равномерно с шагом 0.1
+    xaxis = np.arange(r_min, r_max, 0.1)
+    # Вычисляем значения функции для каждой точки сетки
+    results = objective(xaxis)
+    # Строим обычный 2D график
+    plt.plot(xaxis, results)
+    # plt.colorbar(label='Значения функции')
+    plt.title(objective.__name__)
+    plt.xlabel('x')
+    plt.ylabel('y')
+    plt.grid(True)
+    # Показываем график
+    plt.show()
+
+if __name__ == '__main__':
+    def f(x):
+        return np.sin(x) / x
+    plot_2d(f)
