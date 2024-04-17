@@ -9,7 +9,7 @@ from scipy.optimize import minimize, least_squares, brute
 
 from common.benchmark import BenchmarkResult, MAX_INT
 from common.functions import custom
-from common.functions.functions import functions
+from common.functions import functions
 from common.utils import AbstractRunner, Options, Oracle, Vector, plot, OldOptions, ExitCondition, Coef
 from lab1.runners import CoordinateDescendImprovedRunner, GradientDescendRunner
 from lab2.runners import WolfeOptions, NewtonConstRunner, NewtonConstOptions, NewtonSearchRunner, WolfeRunner

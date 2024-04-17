@@ -10,13 +10,13 @@ from lab2.runners.newton_const import NewtonConstOptions, NewtonConstRunner
 
 @dataclasses.dataclass
 class WolfeOptions(NewtonConstOptions):
-    eps_armijo: float = dataclasses.field(default=0.5, metadata={"bounds": (0, 1)})
-    eps_curvature: float = dataclasses.field(default=0.75, metadata={"bounds": (0, 1)})
+    eps_armijo: float = dataclasses.field(default=0.00018576569900265817, metadata={"bounds": (0, 1)})
+    eps_curvature: float = dataclasses.field(default=0.8941550352184215, metadata={"bounds": (0, 1)})
 
-    a0: float = dataclasses.field(default=1, metadata={"bounds": (0, 1)})
-    teta_armija: float = dataclasses.field(default=0.9, metadata={"bounds": (0, 1)})
+    a0: float = dataclasses.field(default=0.2651735328477399, metadata={"bounds": (0, 1)})
+    teta_armija: float = dataclasses.field(default=0.40125631563010494, metadata={"bounds": (0, 1)})
 
-    search_iterations: float = dataclasses.field(default=0.5, metadata={"bounds": (0, 1)})
+    search_iterations: float = dataclasses.field(default=0.9628174281615451, metadata={"bounds": (0, 1)})
     # acc: float = dataclasses.field(default=3, metadata={"bounds": (0, 5)})
 
     def validate(self):

@@ -37,6 +37,10 @@ class NewtonConstRunner(AbstractRunner):
         prev = np.array(start.coords)
         cur = np.array(start.coords)
         while self.running():
+            if self._log:
+                print(cur)
+                print(self.grad(cur))
+                print(self.grad2(cur))
             cur = cur + self.sk(cur) * self.opts.learning_rate
             if self.opts.exit_condition(prev, cur):
                 break

@@ -21,6 +21,15 @@ class ScipyNewtonCGRunner(AbstractRunner):
                           )
 
 
+class ScipyQuasiNewtonRunner(AbstractRunner):
+    opts: ScipyNewtonCGOptions
+    
+    def _run(self, start: Vector, *args, **kwargs):
+        optimize.minimize(self.o.f, start.ndarray(), method="BFGS",
+                          jac=lambda x: optimize.approx_fprime(x, self.o.f, 0.01),
+                          tol=self.opts.exit_condition_threshold
+                          )
+
 # if __name__ == '__main__':
 #     def f(x, y):
 #         return x ** 2 + y ** 10

@@ -1,8 +1,13 @@
 from common.utils import *
 
 
+class GradientDescendOptions(OldOptions):
+    a: tp.Generator = Coef.GEOMETRIC_PROGRESSION(0.01, 0.99)
+
+
 class GradientDescendRunner(OldRunner):
-    opts: OldOptions
+    opts: GradientDescendOptions
+
     @staticmethod
     def grad(f: tp.Callable[[Vector], float], p: Vector, delta: float) -> Vector:
         ds = []
@@ -25,4 +30,5 @@ class GradientDescendRunner(OldRunner):
         res = Step(point, z)
         if self._log:
             print(res)
-        return res, point - Vector(*map(lambda el: el * ak, _grad))  # возвращаем текущий шаг и координаты для следующего
+        return res, point - Vector(
+            *map(lambda el: el * ak, _grad))  # возвращаем текущий шаг и координаты для следующего
