@@ -1,8 +1,12 @@
 from common.utils import *
 
 
-class GradientDescendOptions(OldOptions):
-    a: tp.Generator = Coef.GEOMETRIC_PROGRESSION(0.01, 0.99)
+class GradientDescendOptions(Options):
+    a: tp.Generator
+
+    def __init__(self):
+        self.a = Coef.GEOMETRIC_PROGRESSION(0.5, 0.996)
+        self.__post_init__()
 
 
 class GradientDescendRunner(OldRunner):
@@ -26,7 +30,7 @@ class GradientDescendRunner(OldRunner):
 
     def _step(self, point: Vector, ak: float) -> tp.Tuple[Step, Vector]:
         z = self.o.f(*point)
-        _grad = self.grad(self.o.f, point, ak)
+        _grad = self.grad(self.o.f, point, 0.0001)
         res = Step(point, z)
         if self._log:
             print(res)

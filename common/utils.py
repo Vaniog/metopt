@@ -514,7 +514,7 @@ class OldRunner(AbstractRunner, ABC):
         raise NotImplementedError()
 
     def _run(self, start: Vector, *args, **kwargs):
-        it, next_point = self._step(start, next(self.a))
+        it, next_point = self._step(start, next(self.opts.a))
         steps = [it]  # тут храним все шаги программы
         while True:
             it, next_point = self._step(next_point, next(self.a))  # шагаем
