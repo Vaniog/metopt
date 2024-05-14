@@ -1,15 +1,16 @@
-package ml
+package training
 
 import (
 	"github.com/stretchr/testify/assert"
 	"gonum.org/v1/gonum/mat"
 	"math/rand/v2"
+	"metopt/ml"
 	"slices"
 	"testing"
 )
 
 func TestGreedyTrainer_Simple(t *testing.T) {
-	ds := NewRowDataSet([][]float64{
+	ds := NewSliceDataSet([][]float64{
 		{0.5, 1},
 		{1, 2},
 		{2, 4},
@@ -17,16 +18,18 @@ func TestGreedyTrainer_Simple(t *testing.T) {
 	})
 
 	trainer := NewGreedyTrainer(
-		MSELoss{},
-		EmptyRegularizator{},
 		0.001,
 		100000,
 		0.001,
 	)
 
-	m := NewLinearModel(1)
+	m := ml.NewLinearModel(ml.Config{
+		RowLen: 1,
+		Loss:   ml.MSELoss{},
+		Reg:    ml.EmptyRegularizator{},
+	})
 	trainer.Train(m, ds)
-	assert.True(t, LossScore(m, ds, MSELoss{}) < 0.1)
+	assert.True(t, LossScore(m, ds) < 0.1)
 }
 
 func randFloatSlice(size int, maxAbs float64) []float64 {
@@ -37,7 +40,7 @@ func randFloatSlice(size int, maxAbs float64) []float64 {
 	return x
 }
 
-func genLinearDataSet(coeffs []float64, size int) [][]float64 {
+func genLinearDataSet(coeffs []float64, size int) DataSet {
 	data := make([][]float64, 0)
 
 	w := mat.NewVecDense(len(coeffs), coeffs)
@@ -46,7 +49,7 @@ func genLinearDataSet(coeffs []float64, size int) [][]float64 {
 		xV := mat.NewVecDense(len(x), x)
 		data = append(data, slices.Concat(x, []float64{mat.Dot(w, xV)}))
 	}
-	return data
+	return NewSliceDataSet(data)
 }
 
 func FuzzGreedyTrainer_Train(f *testing.F) {
@@ -54,22 +57,24 @@ func FuzzGreedyTrainer_Train(f *testing.F) {
 		if rowLen > 10 || rowLen <= 0 {
 			return
 		}
-		ds := NewRowDataSet(genLinearDataSet(
+		ds := genLinearDataSet(
 			randFloatSlice(rowLen, 1),
 			100,
-		))
+		)
 
 		trainer := NewGreedyTrainer(
-			MSELoss{},
-			EmptyRegularizator{},
 			0.001,
 			100000,
 			0.001,
 		)
 
-		m := NewLinearModel(rowLen)
+		m := ml.NewLinearModel(ml.Config{
+			RowLen: rowLen,
+			Loss:   ml.MSELoss{},
+			Reg:    ml.EmptyRegularizator{},
+		})
 		trainer.Train(m, ds)
 
-		assert.True(t, LossScore(m, ds, MSELoss{}) < 0.1)
+		assert.True(t, LossScore(m, ds) < 0.1)
 	})
 }
