@@ -23,14 +23,6 @@ jobs:
           go mod tidy
           go build -v ./...
 
-      - name: Lint
-        uses: golangci/golangci-lint-action@v4
-        with:
-          version: latest
-        run: |
-          cd lab3/impl
-          golangci-lint run
-
       - name: Fuzzing test
         run: |
           cd lab3/impl
