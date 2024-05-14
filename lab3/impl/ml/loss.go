@@ -1,13 +1,17 @@
 package ml
 
-import "gonum.org/v1/gonum/mat"
-
 type Loss interface {
-	F(predicted, actual float64) float64
-	Df(predicted, actual float64) float64
+	F(yPred, y float64) float64
+	Df(yPred, y float64) float64
 }
 
-type Regularizator interface {
-	R(weights mat.Vector) float64
-	Dr(weights mat.Vector) mat.Vector
+type MSELoss struct {
+}
+
+func (s MSELoss) F(yPred, y float64) float64 {
+	return 0.5 * (yPred - y) * (yPred - y)
+}
+
+func (s MSELoss) Df(yPred, y float64) float64 {
+	return yPred - y
 }
