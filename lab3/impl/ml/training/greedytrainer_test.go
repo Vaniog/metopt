@@ -79,8 +79,7 @@ func FuzzGreedyTrainer_Train(f *testing.F) {
 		trainer.Train(m, ds)
 
 		xTrain, yTrain := SplitDataSet(ds)
-		ds = PredictDataSet(m, xTrain)
-		_, yPred := SplitDataSet(ds)
+		yPred := MultiPredict(m, xTrain)
 
 		assert.True(t, R2Score(yPred, yTrain) > 0.8)
 	})

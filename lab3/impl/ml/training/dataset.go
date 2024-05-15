@@ -56,14 +56,21 @@ func SplitDataSet(ds DataSet) (xs []mat.Vector, ys []float64) {
 	return
 }
 
-func PredictDataSet(m ml.Model, inputs []mat.Vector) DataSet {
-	return &SliceDataSet{
-		Rows: filter.Map(inputs, func(row mat.Vector) Row {
-			return Row{
-				row, m.Predict(row),
-			}
-		}),
+func JoinDataSet(xs []mat.Vector, ys []float64) DataSet {
+	var data [][]float64
+	for i := range xs {
+		var row []float64
+		for j := range xs[i].Len() {
+			row = append(row, xs[i].AtVec(j))
+		}
+		row = append(row, ys[i])
+		data = append(data, row)
 	}
+	return NewSliceDataSet(data)
+}
+
+func MultiPredict(m ml.Model, inputs []mat.Vector) []float64 {
+	return filter.Map(inputs, m.Predict)
 }
 
 func ReadCsvFile(filePath string) ([][]string, error) {
