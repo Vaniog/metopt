@@ -45,7 +45,7 @@ func genLinearDataSet(coeffs []float64, size int) DataSet {
 
 	w := mat.NewVecDense(len(coeffs), coeffs)
 	for range size {
-		x := randFloatSlice(len(coeffs), 1)
+		x := randFloatSlice(len(coeffs), 1000)
 		xV := mat.NewVecDense(len(x), x)
 		data = append(data, slices.Concat(x, []float64{mat.Dot(w, xV)}))
 	}
@@ -54,13 +54,16 @@ func genLinearDataSet(coeffs []float64, size int) DataSet {
 
 func FuzzGreedyTrainer_Train(f *testing.F) {
 	f.Fuzz(func(t *testing.T, rowLen int) {
-		if rowLen > 10 || rowLen <= 0 {
+		if rowLen > 20 || rowLen <= 0 {
 			return
 		}
 		ds := genLinearDataSet(
-			randFloatSlice(rowLen, 1),
+			randFloatSlice(rowLen, 1000),
 			100,
 		)
+
+		mms := MeanAbsScaler{}
+		ds = mms.Transform(ds)
 
 		trainer := NewGreedyTrainer(
 			0.001,
@@ -75,6 +78,10 @@ func FuzzGreedyTrainer_Train(f *testing.F) {
 		})
 		trainer.Train(m, ds)
 
-		assert.True(t, LossScore(m, ds) < 0.1)
+		xTrain, yTrain := SplitDataSet(ds)
+		ds = PredictDataSet(m, xTrain)
+		_, yPred := SplitDataSet(ds)
+
+		assert.True(t, R2Score(yPred, yTrain) > 0.8)
 	})
 }
