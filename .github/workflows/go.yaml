@@ -23,13 +23,12 @@ jobs:
           go mod tidy
           go build -v ./...
 
-      - name: Fuzzing test
-        run: |
-          cd lab3/impl
-          go list ./... | grep -vE '(test|scripts|cmd|mock|gen)' | xargs -I{} go test -fuzz=Fuzz -fuzztime=10s {}
-
       - name: Test
         run: |
           cd lab3/impl
           go test -v -race -coverprofile=./cover.out -covermode=atomic -coverpkg=$(go list ./... | grep -vE '(test|scripts|cmd|mock|gen)' | tr '\n' ',') ./...
 
+      - name: Fuzzing test
+        run: |
+          cd lab3/impl
+          go list ./... | grep -vE '(test|scripts|cmd|mock|gen)' | xargs -I{} go test -fuzz=Fuzz -fuzztime=10s {}
