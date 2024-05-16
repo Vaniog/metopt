@@ -1,5 +1,7 @@
 package main
 
-func main() {
+import "metopt/transport"
 
+func main() {
+	transport.StartServer()
 }

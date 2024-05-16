@@ -1,5 +1,7 @@
 import dataclasses
+import json
 import random
+import timeit
 import typing as tp
 from itertools import chain
 from statistics import mean
@@ -60,7 +62,7 @@ def construct_func(runner_type: tp.Type[AbstractRunner],
 def optimize_params(runner_type: tp.Type[AbstractRunner],
                     error_function: ErrorFunction.T,
                     start: Options | None = None,
-                    tol: float = 0.1):
+                    ns: int = 5):
     opts_type = runner_type.opts_type()
     print("#" * 5 + "OPTIMIZE" + "#" * 5)
     print(f"optimizing cls {runner_type.__name__}")
@@ -83,7 +85,7 @@ def optimize_params(runner_type: tp.Type[AbstractRunner],
     # )
     bds = list((f.metadata.get("bounds") for _, f in sorted(fields.items())))
     print(bds)
-    m = brute(f, bds, Ns=5)
+    m = brute(f, bds, Ns=ns)
     print(m)
 
     return construct_options(m)
@@ -119,13 +121,19 @@ def _attempt(runner: tp.Type[AbstractRunner], func, opts: Options, attempts=1):
 
 
 if __name__ == '__main__':
-    m = optimize_params(
-        WolfeRunner,
-        ErrorFunction.accuracy,
-        tol=0.0001
-    )
-    print(m)
-# (NewtonSearchOptions(exit_condition_threshold=0.001, learning_rate=1.0000020137389727, grad_delta=0.0009998425454368135, search_max=10.000007937496651, search_iterations=10), 1.586603032594329)
-# (NewtonSearchOptions(exit_condition_threshold=0.001, learning_rate=1.000000002888933, grad_delta=0.000999999997111067, search_max=10.000000014444666, search_iterations=10), 1.5388257750866914)
-# (NewtonSearchOptions(exit_condition_threshold=0.001, learning_rate=1.0000004748111873, grad_delta=0.000999999529945541, search_max=9.999997625874334, search_iterations=9), 1.545624062564911)
-# (NewtonSearchOptions(exit_condition_threshold=0.001, learning_rate=0.9999994154651817, grad_delta=0.0009999994154651817, search_max=9.999997077325908, search_iterations=9), 1.3626499050734104)
+    start = timeit.default_timer()
+    res = []
+    for R in [NewtonConstRunner, NewtonSearchRunner, WolfeRunner]:
+        m = optimize_params(
+            R,
+            ErrorFunction.accuracy,
+            ns=5
+        )
+        res.append(m)
+    end = timeit.default_timer()
+    print(f"total worked {end - start}")
+    for r in res:
+        print(r)
+
+
+

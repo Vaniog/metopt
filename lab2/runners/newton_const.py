@@ -10,8 +10,8 @@ from lab2.runners.grad import grad, grad2, newton_dir
 
 @dataclasses.dataclass
 class NewtonConstOptions(Options):
-    learning_rate: float = dataclasses.field(default=1, metadata={"bounds": (0, 2), "fixed": True})
-    grad_delta: float = dataclasses.field(default=0.001, metadata={"bounds": (0, 0.1), "fixed": True})
+    learning_rate: float = dataclasses.field(default=1, metadata={"bounds": (0, 2)})
+    grad_delta: float = dataclasses.field(default=0.001, metadata={"bounds": (0, 0.1)})
 
     def validate(self):
         return all((

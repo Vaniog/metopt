@@ -21,6 +21,7 @@ type Row struct {
 type DataSet interface {
 	Row(idx int) Row
 	Len() int
+	Dim() int
 }
 
 func NewRow(row []float64) Row {
@@ -38,6 +39,13 @@ func NewSliceDataSet(rows [][]float64) *SliceDataSet {
 	return &SliceDataSet{
 		Rows: filter.Map(rows, NewRow),
 	}
+}
+
+func (rd *SliceDataSet) Dim() int {
+	if len(rd.Rows) == 0 {
+		panic("empty dataset")
+	}
+	return rd.Rows[0].X.Len()
 }
 
 func (rd *SliceDataSet) Row(idx int) Row {

@@ -1,6 +1,9 @@
 package training
 
-import "metopt/ml"
+import (
+	"log"
+	"metopt/ml"
+)
 
 type GreedyTrainer struct {
 	maxIterations int
@@ -29,5 +32,8 @@ func (gt GreedyTrainer) Train(m ml.Model, ds DataSet) {
 		grad.ScaleVec(-1.0*gt.gradStep, grad)
 		m.Weights().AddVec(grad, m.Weights())
 		iterations++
+		if iterations%1000 == 0 {
+			log.Println(iterations, LossScore(m, ds))
+		}
 	}
 }
