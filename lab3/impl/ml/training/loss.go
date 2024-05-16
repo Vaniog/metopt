@@ -14,17 +14,24 @@ func LossScore(m ml.Model, ds DataSet) float64 {
 	return curLoss/float64(ds.Len()) + m.Config().Reg.R(m.Weights())
 }
 
-func lossGrad(m ml.Model, ds DataSet) *mat.VecDense {
+// lossGrad return d(loss)/d(weights) and d(loss)/d(bias)
+func lossGrad(m ml.Model, ds DataSet) (*mat.VecDense, float64) {
 	gradSum := mat.NewVecDense(ds.Row(0).X.Len(), nil)
+	biasGradSum := 0.0
 
 	for i := range ds.Len() {
 		r := ds.Row(i)
 		wGrad := mat.VecDenseCopyOf(m.DP(r.X))
-		wGrad.ScaleVec(m.Config().Loss.Df(m.Predict(r.X), r.Y), wGrad)
+		errorTerm := m.Config().Loss.Df(m.Predict(r.X), r.Y)
+		wGrad.ScaleVec(errorTerm, wGrad)
 		gradSum.AddVec(gradSum, wGrad)
+		if m.Config().Bias {
+			biasGradSum += errorTerm
+		}
 	}
 
 	gradSum.ScaleVec(1.0/float64(ds.Len()), gradSum)
 	gradSum.AddVec(gradSum, m.Config().Reg.Dr(m.Weights()))
-	return gradSum
+	biasGradSum /= float64(ds.Len())
+	return gradSum, biasGradSum
 }

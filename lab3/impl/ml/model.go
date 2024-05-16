@@ -8,6 +8,8 @@ type Model interface {
 	Predict(x mat.Vector) float64
 	Config() Config
 	Weights() *mat.VecDense
+	Bias() float64
+	SetBias(float64)
 	DP(x mat.Vector) mat.Vector
 }
 
@@ -16,4 +18,5 @@ type Config struct {
 	RowLen int
 	Loss   Loss
 	Reg    Regularizator
+	Bias   bool
 }
