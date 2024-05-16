@@ -49,6 +49,11 @@ class MlStub(object):
                 request_serializer=impl_dot_transport_dot_api__pb2.PredictRequest.SerializeToString,
                 response_deserializer=impl_dot_transport_dot_api__pb2.PredictResponse.FromString,
                 _registered_method=True)
+        self.getModel = channel.unary_unary(
+                '/Ml/getModel',
+                request_serializer=impl_dot_transport_dot_api__pb2.GetModelRequest.SerializeToString,
+                response_deserializer=impl_dot_transport_dot_api__pb2.Model.FromString,
+                _registered_method=True)
 
 
 class MlServicer(object):
@@ -66,6 +71,12 @@ class MlServicer(object):
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def getModel(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_MlServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -78,6 +89,11 @@ def add_MlServicer_to_server(servicer, server):
                     servicer.predict,
                     request_deserializer=impl_dot_transport_dot_api__pb2.PredictRequest.FromString,
                     response_serializer=impl_dot_transport_dot_api__pb2.PredictResponse.SerializeToString,
+            ),
+            'getModel': grpc.unary_unary_rpc_method_handler(
+                    servicer.getModel,
+                    request_deserializer=impl_dot_transport_dot_api__pb2.GetModelRequest.FromString,
+                    response_serializer=impl_dot_transport_dot_api__pb2.Model.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -133,6 +149,33 @@ class Ml(object):
             '/Ml/predict',
             impl_dot_transport_dot_api__pb2.PredictRequest.SerializeToString,
             impl_dot_transport_dot_api__pb2.PredictResponse.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def getModel(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/Ml/getModel',
+            impl_dot_transport_dot_api__pb2.GetModelRequest.SerializeToString,
+            impl_dot_transport_dot_api__pb2.Model.FromString,
             options,
             channel_credentials,
             insecure,

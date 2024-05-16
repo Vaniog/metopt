@@ -6,10 +6,32 @@ from typing import ClassVar as _ClassVar, Iterable as _Iterable, Mapping as _Map
 DESCRIPTOR: _descriptor.FileDescriptor
 
 class TrainRequest(_message.Message):
-    __slots__ = ("path",)
+    __slots__ = ("path", "trainerConfig", "modelConfig")
     PATH_FIELD_NUMBER: _ClassVar[int]
+    TRAINERCONFIG_FIELD_NUMBER: _ClassVar[int]
+    MODELCONFIG_FIELD_NUMBER: _ClassVar[int]
     path: str
-    def __init__(self, path: _Optional[str] = ...) -> None: ...
+    trainerConfig: TrainerConfig
+    modelConfig: ModelConfig
+    def __init__(self, path: _Optional[str] = ..., trainerConfig: _Optional[_Union[TrainerConfig, _Mapping]] = ..., modelConfig: _Optional[_Union[ModelConfig, _Mapping]] = ...) -> None: ...
+
+class ModelConfig(_message.Message):
+    __slots__ = ("type", "regularizator", "loss")
+    TYPE_FIELD_NUMBER: _ClassVar[int]
+    REGULARIZATOR_FIELD_NUMBER: _ClassVar[int]
+    LOSS_FIELD_NUMBER: _ClassVar[int]
+    type: str
+    regularizator: str
+    loss: str
+    def __init__(self, type: _Optional[str] = ..., regularizator: _Optional[str] = ..., loss: _Optional[str] = ...) -> None: ...
+
+class TrainerConfig(_message.Message):
+    __slots__ = ("type", "params")
+    TYPE_FIELD_NUMBER: _ClassVar[int]
+    PARAMS_FIELD_NUMBER: _ClassVar[int]
+    type: str
+    params: _containers.RepeatedScalarFieldContainer[float]
+    def __init__(self, type: _Optional[str] = ..., params: _Optional[_Iterable[float]] = ...) -> None: ...
 
 class DataSet(_message.Message):
     __slots__ = ("rows",)
@@ -34,10 +56,12 @@ class Row(_message.Message):
     def __init__(self, x: _Optional[_Iterable[float]] = ..., y: _Optional[float] = ...) -> None: ...
 
 class Model(_message.Message):
-    __slots__ = ("weights",)
+    __slots__ = ("type", "weights")
+    TYPE_FIELD_NUMBER: _ClassVar[int]
     WEIGHTS_FIELD_NUMBER: _ClassVar[int]
+    type: str
     weights: _containers.RepeatedScalarFieldContainer[float]
-    def __init__(self, weights: _Optional[_Iterable[float]] = ...) -> None: ...
+    def __init__(self, type: _Optional[str] = ..., weights: _Optional[_Iterable[float]] = ...) -> None: ...
 
 class TrainResponse(_message.Message):
     __slots__ = ("modelId", "benchmark")
@@ -62,3 +86,9 @@ class PredictResponse(_message.Message):
     y: _containers.RepeatedScalarFieldContainer[float]
     benchmark: Benchmark
     def __init__(self, y: _Optional[_Iterable[float]] = ..., benchmark: _Optional[_Union[Benchmark, _Mapping]] = ...) -> None: ...
+
+class GetModelRequest(_message.Message):
+    __slots__ = ("id",)
+    ID_FIELD_NUMBER: _ClassVar[int]
+    id: str
+    def __init__(self, id: _Optional[str] = ...) -> None: ...

@@ -24,6 +24,7 @@ const _ = grpc.SupportPackageIsVersion7
 type MlClient interface {
 	Train(ctx context.Context, in *TrainRequest, opts ...grpc.CallOption) (*TrainResponse, error)
 	Predict(ctx context.Context, in *PredictRequest, opts ...grpc.CallOption) (*PredictResponse, error)
+	GetModel(ctx context.Context, in *GetModelRequest, opts ...grpc.CallOption) (*Model, error)
 }
 
 type mlClient struct {
@@ -52,12 +53,22 @@ func (c *mlClient) Predict(ctx context.Context, in *PredictRequest, opts ...grpc
 	return out, nil
 }
 
+func (c *mlClient) GetModel(ctx context.Context, in *GetModelRequest, opts ...grpc.CallOption) (*Model, error) {
+	out := new(Model)
+	err := c.cc.Invoke(ctx, "/Ml/getModel", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
 // MlServer is the server API for Ml service.
 // All implementations must embed UnimplementedMlServer
 // for forward compatibility
 type MlServer interface {
 	Train(context.Context, *TrainRequest) (*TrainResponse, error)
 	Predict(context.Context, *PredictRequest) (*PredictResponse, error)
+	GetModel(context.Context, *GetModelRequest) (*Model, error)
 	mustEmbedUnimplementedMlServer()
 }
 
@@ -70,6 +81,9 @@ func (UnimplementedMlServer) Train(context.Context, *TrainRequest) (*TrainRespon
 }
 func (UnimplementedMlServer) Predict(context.Context, *PredictRequest) (*PredictResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Predict not implemented")
+}
+func (UnimplementedMlServer) GetModel(context.Context, *GetModelRequest) (*Model, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method GetModel not implemented")
 }
 func (UnimplementedMlServer) mustEmbedUnimplementedMlServer() {}
 
@@ -120,6 +134,24 @@ func _Ml_Predict_Handler(srv interface{}, ctx context.Context, dec func(interfac
 	return interceptor(ctx, in, info, handler)
 }
 
+func _Ml_GetModel_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(GetModelRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(MlServer).GetModel(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/Ml/getModel",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(MlServer).GetModel(ctx, req.(*GetModelRequest))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
 // Ml_ServiceDesc is the grpc.ServiceDesc for Ml service.
 // It's only intended for direct use with grpc.RegisterService,
 // and not to be introspected or modified (even as a copy)
@@ -134,6 +166,10 @@ var Ml_ServiceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "predict",
 			Handler:    _Ml_Predict_Handler,
+		},
+		{
+			MethodName: "getModel",
+			Handler:    _Ml_GetModel_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

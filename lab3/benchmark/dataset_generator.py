@@ -6,6 +6,11 @@ import random
 import numpy as np
 import typing as tp
 import matplotlib.pyplot as plt
+import pandas
+import pandas as pd
+
+from lab3.benchmark.visualization import plot_dataset
+from transport.generated.api_pb2 import Model
 
 
 class Functions:
@@ -24,9 +29,9 @@ class Functions:
 class GeneratorConfig:
     dim: int = 2
     rows: int = 10_000
-    pow: int = 1
-    noize: int = 0.01
-    dist: float = 5
+    noize: float = 0.01
+    dist_y: float = 5
+    dist_x: float = 5
     functions: tp.List[tp.Callable[[float], float]] = dataclasses.field(default_factory=lambda: Functions.ALL)
 
 
@@ -37,6 +42,7 @@ class Row:
 
 
 def generate(output: str, cfg: GeneratorConfig):
+    open(output, 'w').close()
     batch_size = 10_000
     buffer = [None] * batch_size
     noize = np.random.uniform(-cfg.noize, cfg.noize, (cfg.rows,))
@@ -46,8 +52,8 @@ def generate(output: str, cfg: GeneratorConfig):
         idx = i % batch_size
         if idx == 0:
             _save_buffer(output, buffer)
-        x = (np.random.random(cfg.dim) - 0.5)
-        buffer[idx] = [*x, raw_func(x * cfg.dist) + noize[idx]]
+        x = (np.random.random(cfg.dim) - 0.5) * cfg.dist_x
+        buffer[idx] = [*x, raw_func(x * cfg.dist_y) + noize[idx]]
         i += 1
     _save_buffer(output, buffer)
     return raw_func
@@ -75,44 +81,10 @@ def _generate_function(dim: int, functions: list[tp.Callable[[float], float]]) -
     return inner
 
 
-def plot3d(objective: tp.Callable):
-    # define range for input
-    r_min, r_max = -10.0, 10.0
-    # sample input range uniformly at 0.1 increments
-    xaxis = np.arange(r_min, r_max, 0.1)
-    yaxis = np.arange(r_min, r_max, 0.1)
-    # create a mesh from the axis
-    x, y = np.meshgrid(xaxis, yaxis)
-    # compute targets
-    results = objective([x, y])
-    # create a surface plot with the jet color scheme
-    figure = plt.figure()
-    axis = plt.axes(projection='3d')
-    axis.plot_surface(x, y, results, cmap='jet')
-    axis.set_title(objective.__name__)
-    # show the plot
-    plt.show()
-
-
-def plot2d(objective: tp.Callable):
-    # Определяем диапазон для входных значений
-    r_min, r_max = -10.0, 10.0
-    # Генерируем входные значения равномерно с шагом 0.1
-    xaxis = np.arange(r_min, r_max, 0.1)
-    # Вычисляем значения функции для каждой точки сетки
-    results = objective([xaxis])
-    # Строим обычный 2D график
-    plt.plot(xaxis, results)
-    # plt.colorbar(label='Значения функции')
-    plt.title(objective.__name__)
-    plt.xlabel('x')
-    plt.ylabel('y')
-    plt.grid(True)
-    # Показываем график
-    plt.show()
-
-
 if __name__ == '__main__':
+    pass
     # plot3d(_generate_function(2, Functions.LINEAR))
     # plot2d(_generate_function(1, [*Functions.LINEAR, lambda x: x ** 2]))
-    generate("test.csv", GeneratorConfig())
+    # generate("test_1dim.csv", GeneratorConfig(dim=1, rows=2000, noize=2, functions=Functions.LINEAR))
+    # plot_dataset("test_1dim.csv")
+    # plot_csv("test_1dim.csv")

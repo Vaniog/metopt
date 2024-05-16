@@ -4,6 +4,19 @@ option go_package = "./generated";
 message TrainRequest {
   // path to train dataset
   string path = 1;
+  TrainerConfig trainerConfig = 2;
+  ModelConfig modelConfig = 3;
+}
+
+message ModelConfig {
+  string type = 1;
+  string regularizator = 2;
+  string loss = 3;
+}
+
+message TrainerConfig {
+  string type = 1;
+  repeated double params = 2;
 }
 
 message DataSet {
@@ -21,7 +34,9 @@ message Row {
 }
 
 message Model {
-  repeated double weights = 1;
+  string type = 1;
+  repeated double weights = 2;
+  double bias = 3;
 }
 
 message TrainResponse {
@@ -39,9 +54,14 @@ message PredictResponse {
   Benchmark benchmark = 2;
 }
 
+message GetModelRequest {
+  string id = 1;
+}
+
 service Ml {
   rpc train(TrainRequest) returns (TrainResponse);
   rpc predict(PredictRequest) returns (PredictResponse);
+  rpc getModel(GetModelRequest) returns (Model);
 }
 
 //protoc --go_out=./ --go-rpc_out=./ -I ./ ./*.proto

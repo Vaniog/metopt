@@ -2,16 +2,60 @@ package transport
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/google/uuid"
 	"gonum.org/v1/gonum/mat"
 	"metopt/ml"
+	"metopt/ml/training"
 	"metopt/transport/generated"
 	"os"
 	"path"
+	"reflect"
+	"strings"
 )
 
 type ModelSerializer struct {
 	path string
+}
+
+func getModel(tp string, cfg ml.Config) ml.Model {
+	switch tp {
+	case "LinearModel":
+		return ml.NewLinearModel(cfg)
+	}
+	return nil
+}
+
+func getTrainer(config *generated.TrainerConfig) training.Trainer {
+	switch config.Type {
+	case "GreedyTrainer":
+		return training.NewGreedyTrainer(
+			config.Params[0],
+			int(config.Params[1]),
+			config.Params[2],
+		)
+	}
+	return nil
+}
+
+func getLoss(tp string) ml.Loss {
+	switch tp {
+	case "MSELoss":
+		return ml.MSELoss{}
+	}
+	return nil
+}
+
+func getRegularizator(tp string) ml.Regularizator {
+	switch tp {
+	case "EmptyRegularizator":
+		return ml.EmptyRegularizator{}
+	}
+	return nil
+}
+
+func getModelName(model ml.Model) string {
+	return strings.Replace(reflect.ValueOf(model).Type().String(), "*ml.", "", -1)
 }
 
 func NewModelSerializer(path string) *ModelSerializer {
@@ -21,7 +65,12 @@ func NewModelSerializer(path string) *ModelSerializer {
 }
 
 func (s *ModelSerializer) Serialize(model ml.Model) (string, error) {
-	transportModel := &generated.Model{Weights: model.Weights().RawVector().Data}
+	fmt.Println(model.Bias())
+	transportModel := &generated.Model{
+		Weights: model.Weights().RawVector().Data,
+		Type:    getModelName(model),
+		Bias:    model.Bias(),
+	}
 	id := uuid.New()
 	serialized, err := json.Marshal(transportModel)
 	if err != nil {
@@ -45,8 +94,9 @@ func (s *ModelSerializer) Deserialize(id string) (ml.Model, error) {
 	if err != nil {
 		return nil, err
 	}
-	model := ml.NewLinearModel(ml.Config{RowLen: len(transportModel.Weights)})
+	model := getModel(transportModel.Type, ml.Config{RowLen: len(transportModel.Weights)})
 	model.Weights().CopyVec(mat.NewVecDense(len(transportModel.Weights), transportModel.Weights))
+	model.SetBias(transportModel.Bias)
 	return model, nil
 }
 

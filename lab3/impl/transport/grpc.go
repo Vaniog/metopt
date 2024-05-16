@@ -19,22 +19,21 @@ type MlServer struct {
 	generated.MlServer
 }
 
+var serializer = NewModelSerializer(ModelsFolder)
+
 func (s *MlServer) Train(ctx context.Context, r *generated.TrainRequest) (*generated.TrainResponse, error) {
 	log.Println("start training")
 	ds, err := training.NewSliceDatasetFromCSV(r.Path)
 	if err != nil {
 		return nil, err
 	}
-	m := ml.NewLinearModel(ml.Config{
+	m := getModel(r.ModelConfig.Type, ml.Config{
+		Bias:   true,
 		RowLen: ds.Dim(),
-		Loss:   ml.MSELoss{},
-		Reg:    ml.EmptyRegularizator{},
+		Loss:   getLoss(r.ModelConfig.Loss),
+		Reg:    getRegularizator(r.ModelConfig.Regularizator),
 	})
-	trainer := training.NewGreedyTrainer(
-		0.001,
-		100000,
-		0.001,
-	)
+	trainer := getTrainer(r.TrainerConfig)
 	_, err, ms := bencmark.Profile(func() (any, error) {
 		trainer.Train(m, ds)
 		return nil, nil
@@ -43,7 +42,6 @@ func (s *MlServer) Train(ctx context.Context, r *generated.TrainRequest) (*gener
 	if err != nil {
 		return nil, err
 	}
-	serializer := NewModelSerializer(ModelsFolder)
 	id, err := serializer.Serialize(m)
 	if err != nil {
 		return nil, err
@@ -55,7 +53,6 @@ func (s *MlServer) Train(ctx context.Context, r *generated.TrainRequest) (*gener
 }
 
 func (s *MlServer) Predict(ctx context.Context, r *generated.PredictRequest) (*generated.PredictResponse, error) {
-	serializer := NewModelSerializer(ModelsFolder)
 	m, err := serializer.Deserialize(r.ModelId)
 	if err != nil {
 		return nil, err
@@ -74,6 +71,18 @@ func (s *MlServer) Predict(ctx context.Context, r *generated.PredictRequest) (*g
 		Y:         res,
 		Benchmark: ms,
 	}, nil
+}
+
+func (s *MlServer) GetModel(ctx context.Context, r *generated.GetModelRequest) (*generated.Model, error) {
+	m, err := serializer.Deserialize(r.Id)
+	if err != nil {
+		return nil, err
+	}
+	return &generated.Model{
+		Type:    getModelName(m),
+		Weights: m.Weights().RawVector().Data,
+	}, nil
+
 }
 
 func StartServer() {

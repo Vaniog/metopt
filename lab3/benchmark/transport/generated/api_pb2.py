@@ -14,7 +14,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x18impl/transport/api.proto\"\x1c\n\x0cTrainRequest\x12\x0c\n\x04path\x18\x01 \x01(\t\"\x1d\n\x07\x44\x61taSet\x12\x12\n\x04rows\x18\x01 \x03(\x0b\x32\x04.Row\"&\n\tBenchmark\x12\x0c\n\x04time\x18\x01 \x01(\x03\x12\x0b\n\x03mem\x18\x02 \x01(\x03\"&\n\x03Row\x12\t\n\x01x\x18\x01 \x03(\x01\x12\x0e\n\x01y\x18\x02 \x01(\x01H\x00\x88\x01\x01\x42\x04\n\x02_y\"\x18\n\x05Model\x12\x0f\n\x07weights\x18\x01 \x03(\x01\"?\n\rTrainResponse\x12\x0f\n\x07modelId\x18\x01 \x01(\t\x12\x1d\n\tbenchmark\x18\x02 \x01(\x0b\x32\n.Benchmark\"9\n\x0ePredictRequest\x12\x0f\n\x07modelId\x18\x01 \x01(\t\x12\x16\n\x04\x64\x61ta\x18\x02 \x01(\x0b\x32\x08.DataSet\";\n\x0fPredictResponse\x12\t\n\x01y\x18\x01 \x03(\x01\x12\x1d\n\tbenchmark\x18\x02 \x01(\x0b\x32\n.Benchmark2Z\n\x02Ml\x12&\n\x05train\x12\r.TrainRequest\x1a\x0e.TrainResponse\x12,\n\x07predict\x12\x0f.PredictRequest\x1a\x10.PredictResponseB\rZ\x0b./generatedb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\x18impl/transport/api.proto\"f\n\x0cTrainRequest\x12\x0c\n\x04path\x18\x01 \x01(\t\x12%\n\rtrainerConfig\x18\x02 \x01(\x0b\x32\x0e.TrainerConfig\x12!\n\x0bmodelConfig\x18\x03 \x01(\x0b\x32\x0c.ModelConfig\"@\n\x0bModelConfig\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x15\n\rregularizator\x18\x02 \x01(\t\x12\x0c\n\x04loss\x18\x03 \x01(\t\"-\n\rTrainerConfig\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x0e\n\x06params\x18\x02 \x03(\x01\"\x1d\n\x07\x44\x61taSet\x12\x12\n\x04rows\x18\x01 \x03(\x0b\x32\x04.Row\"&\n\tBenchmark\x12\x0c\n\x04time\x18\x01 \x01(\x03\x12\x0b\n\x03mem\x18\x02 \x01(\x03\"&\n\x03Row\x12\t\n\x01x\x18\x01 \x03(\x01\x12\x0e\n\x01y\x18\x02 \x01(\x01H\x00\x88\x01\x01\x42\x04\n\x02_y\"&\n\x05Model\x12\x0c\n\x04type\x18\x01 \x01(\t\x12\x0f\n\x07weights\x18\x02 \x03(\x01\"?\n\rTrainResponse\x12\x0f\n\x07modelId\x18\x01 \x01(\t\x12\x1d\n\tbenchmark\x18\x02 \x01(\x0b\x32\n.Benchmark\"9\n\x0ePredictRequest\x12\x0f\n\x07modelId\x18\x01 \x01(\t\x12\x16\n\x04\x64\x61ta\x18\x02 \x01(\x0b\x32\x08.DataSet\";\n\x0fPredictResponse\x12\t\n\x01y\x18\x01 \x03(\x01\x12\x1d\n\tbenchmark\x18\x02 \x01(\x0b\x32\n.Benchmark\"\x1d\n\x0fGetModelRequest\x12\n\n\x02id\x18\x01 \x01(\t2\x80\x01\n\x02Ml\x12&\n\x05train\x12\r.TrainRequest\x1a\x0e.TrainResponse\x12,\n\x07predict\x12\x0f.PredictRequest\x1a\x10.PredictResponse\x12$\n\x08getModel\x12\x10.GetModelRequest\x1a\x06.ModelB\rZ\x0b./generatedb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -23,21 +23,27 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['DESCRIPTOR']._loaded_options = None
   _globals['DESCRIPTOR']._serialized_options = b'Z\013./generated'
   _globals['_TRAINREQUEST']._serialized_start=28
-  _globals['_TRAINREQUEST']._serialized_end=56
-  _globals['_DATASET']._serialized_start=58
-  _globals['_DATASET']._serialized_end=87
-  _globals['_BENCHMARK']._serialized_start=89
-  _globals['_BENCHMARK']._serialized_end=127
-  _globals['_ROW']._serialized_start=129
-  _globals['_ROW']._serialized_end=167
-  _globals['_MODEL']._serialized_start=169
-  _globals['_MODEL']._serialized_end=193
-  _globals['_TRAINRESPONSE']._serialized_start=195
-  _globals['_TRAINRESPONSE']._serialized_end=258
-  _globals['_PREDICTREQUEST']._serialized_start=260
-  _globals['_PREDICTREQUEST']._serialized_end=317
-  _globals['_PREDICTRESPONSE']._serialized_start=319
-  _globals['_PREDICTRESPONSE']._serialized_end=378
-  _globals['_ML']._serialized_start=380
-  _globals['_ML']._serialized_end=470
+  _globals['_TRAINREQUEST']._serialized_end=130
+  _globals['_MODELCONFIG']._serialized_start=132
+  _globals['_MODELCONFIG']._serialized_end=196
+  _globals['_TRAINERCONFIG']._serialized_start=198
+  _globals['_TRAINERCONFIG']._serialized_end=243
+  _globals['_DATASET']._serialized_start=245
+  _globals['_DATASET']._serialized_end=274
+  _globals['_BENCHMARK']._serialized_start=276
+  _globals['_BENCHMARK']._serialized_end=314
+  _globals['_ROW']._serialized_start=316
+  _globals['_ROW']._serialized_end=354
+  _globals['_MODEL']._serialized_start=356
+  _globals['_MODEL']._serialized_end=394
+  _globals['_TRAINRESPONSE']._serialized_start=396
+  _globals['_TRAINRESPONSE']._serialized_end=459
+  _globals['_PREDICTREQUEST']._serialized_start=461
+  _globals['_PREDICTREQUEST']._serialized_end=518
+  _globals['_PREDICTRESPONSE']._serialized_start=520
+  _globals['_PREDICTRESPONSE']._serialized_end=579
+  _globals['_GETMODELREQUEST']._serialized_start=581
+  _globals['_GETMODELREQUEST']._serialized_end=610
+  _globals['_ML']._serialized_start=613
+  _globals['_ML']._serialized_end=741
 # @@protoc_insertion_point(module_scope)
