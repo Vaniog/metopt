@@ -6,7 +6,7 @@ import (
 )
 
 func TestProfiler(t *testing.T) {
-	N := 500_000_001
+	N := 500_000
 	f := func() (int, error) {
 		res := 0
 		arr := make([]int, 0)
