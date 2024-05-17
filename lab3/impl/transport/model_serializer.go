@@ -104,5 +104,28 @@ func (s *ModelSerializer) readFromFile(id string) ([]byte, error) {
 	return os.ReadFile(path.Join(s.path, id))
 }
 func (s *ModelSerializer) writeToFile(id string, data []byte) error {
+	err := s.mkdirPath()
+	if err != nil {
+		return err
+	}
 	return os.WriteFile(path.Join(s.path, id), data, 0777)
+}
+
+func (s *ModelSerializer) mkdirPath() error {
+	ex, err := exists(s.path)
+	if err == nil && !ex {
+		return os.MkdirAll(s.path, os.ModePerm)
+	}
+	return err
+}
+
+func exists(path string) (bool, error) {
+	_, err := os.Stat(path)
+	if err == nil {
+		return true, nil
+	}
+	if os.IsNotExist(err) {
+		return false, nil
+	}
+	return false, err
 }
