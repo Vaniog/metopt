@@ -1,6 +1,7 @@
 package training
 
 import (
+	"gonum.org/v1/gonum/mat"
 	"log"
 	"metopt/ml"
 )
@@ -24,13 +25,13 @@ func NewGreedyTrainer(
 }
 
 func (gt GreedyTrainer) Train(m ml.Model, ds DataSet) {
-	m.Weights().Zero()
-
 	iterations := 0
 	for LossScore(m, ds) > gt.targetLoss && iterations < gt.maxIterations {
 		grad, biasGrad := lossGrad(m, ds)
 		grad.ScaleVec(-1.0*gt.gradStep, grad)
-		m.Weights().AddVec(grad, m.Weights())
+		wUpdated := mat.VecDenseCopyOf(m.Weights())
+		wUpdated.AddVec(grad, wUpdated)
+		m.SetWeights(wUpdated)
 		m.SetBias(m.Bias() - gt.gradStep*biasGrad)
 		iterations++
 		if iterations%1000 == 0 {

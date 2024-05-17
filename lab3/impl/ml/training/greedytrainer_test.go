@@ -91,6 +91,31 @@ func FuzzGreedyTrainer_LinearModelFuzz(f *testing.F) {
 	})
 }
 
+func TestGreedyTrainer_PolynomialModel(t *testing.T) {
+	// y = 2*x*x + 3*x
+	ds := NewSliceDataSet([][]float64{
+		{0.5, 2},
+		{1, 5},
+		{2, 14},
+		{5, 65},
+	})
+
+	trainer := NewGreedyTrainer(
+		0.001,
+		100000,
+		0.01,
+	)
+
+	m := ml.NewPolynomialModel(ml.Config{
+		RowLen: 1,
+		Loss:   ml.MSELoss{},
+		Reg:    ml.EmptyRegularizator{},
+		Bias:   false,
+	}, 2)
+	trainer.Train(m, ds)
+	assert.True(t, LossScore(m, ds) < 0.1)
+}
+
 func randFloatSlice(size int, maxAbs float64) []float64 {
 	x := make([]float64, size)
 	for i := range x {

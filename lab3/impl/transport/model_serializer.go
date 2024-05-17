@@ -95,7 +95,7 @@ func (s *ModelSerializer) Deserialize(id string) (ml.Model, error) {
 		return nil, err
 	}
 	model := getModel(transportModel.Type, ml.Config{RowLen: len(transportModel.Weights)})
-	model.Weights().CopyVec(mat.NewVecDense(len(transportModel.Weights), transportModel.Weights))
+	model.SetWeights(mat.NewVecDense(len(transportModel.Weights), transportModel.Weights))
 	model.SetBias(transportModel.Bias)
 	return model, nil
 }

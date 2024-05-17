@@ -5,9 +5,9 @@ import (
 )
 
 type LinearModel struct {
-	w *mat.VecDense
-	b float64 // bias term
-	c Config
+	w    *mat.VecDense
+	bias float64
+	c    Config
 }
 
 func (lm *LinearModel) Config() Config {
@@ -28,19 +28,22 @@ func (lm *LinearModel) DP(x mat.Vector) mat.Vector {
 func (lm *LinearModel) Predict(x mat.Vector) float64 {
 	prediction := mat.Dot(lm.w, x)
 	if lm.c.Bias {
-		prediction += lm.b
+		prediction += lm.bias
 	}
 	return prediction
 }
 
 func (lm *LinearModel) Weights() *mat.VecDense {
-	return lm.w
+	return mat.VecDenseCopyOf(lm.w)
+}
+func (lm *LinearModel) SetWeights(v mat.Vector) {
+	lm.w = mat.VecDenseCopyOf(v)
 }
 
 func (lm *LinearModel) Bias() float64 {
-	return lm.b
+	return lm.bias
 }
 
 func (lm *LinearModel) SetBias(b float64) {
-	lm.b = b
+	lm.bias = b
 }

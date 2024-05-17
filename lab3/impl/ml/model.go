@@ -8,6 +8,7 @@ type Model interface {
 	Predict(x mat.Vector) float64
 	Config() Config
 	Weights() *mat.VecDense
+	SetWeights(mat.Vector)
 	Bias() float64
 	SetBias(float64)
 	DP(x mat.Vector) mat.Vector

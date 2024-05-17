@@ -16,7 +16,7 @@ func LossScore(m ml.Model, ds DataSet) float64 {
 
 // lossGrad return d(loss)/d(weights) and d(loss)/d(bias)
 func lossGrad(m ml.Model, ds DataSet) (*mat.VecDense, float64) {
-	gradSum := mat.NewVecDense(ds.Row(0).X.Len(), nil)
+	gradSum := mat.NewVecDense(m.Weights().Len(), nil)
 	biasGradSum := 0.0
 
 	for i := range ds.Len() {
@@ -28,6 +28,7 @@ func lossGrad(m ml.Model, ds DataSet) (*mat.VecDense, float64) {
 		if m.Config().Bias {
 			biasGradSum += errorTerm
 		}
+
 	}
 
 	gradSum.ScaleVec(1.0/float64(ds.Len()), gradSum)
