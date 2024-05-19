@@ -21,7 +21,7 @@ func NewLinearModel(c Config) *LinearModel {
 	}
 }
 
-func (lm *LinearModel) DP(x mat.Vector) mat.Vector {
+func (lm *LinearModel) Dp(x mat.Vector) mat.Vector {
 	return x
 }
 

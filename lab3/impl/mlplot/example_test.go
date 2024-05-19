@@ -1,7 +1,7 @@
 package mlplot
 
 import (
-	"math/rand/v2"
+	"math"
 	"metopt/ml/training"
 )
 
@@ -19,7 +19,7 @@ func ExamplePredictWithLinearAndPlot() {
 func ExamplePredictWithPolynomialAndPlot() {
 	PredictWithPolynomialAndPlot(DatasetFromFunction(
 		AppendNoise(func(x float64) float64 {
-			return rand.Float64()
-		}, 0.2), -1, 1, 4), 5)
+			return 2*x*x*x + math.Pow(2*x-0.3, 6) + x
+		}, 0), -1, 1, 100), 6)
 	// Output:
 }

@@ -84,7 +84,7 @@ func PredictWithLinearAndPlot(ds training.DataSet) {
 	p := plot.New()
 	PlotDataSet(p, ds)
 	PlotModel(p, lm)
-	PlotSave(p, "dataset.png")
+	PlotSave(p, "dataset.svg")
 }
 
 func PredictWithPolynomialAndPlot(ds training.DataSet, degree int) {
@@ -101,8 +101,8 @@ func PredictWithPolynomialAndPlot(ds training.DataSet, degree int) {
 
 	trainer := training.NewGreedyTrainer(
 		0,
-		10000,
-		0.005,
+		100000,
+		0.02,
 	)
 
 	trainer.Train(pm, ds)
@@ -110,5 +110,5 @@ func PredictWithPolynomialAndPlot(ds training.DataSet, degree int) {
 	p := plot.New()
 	PlotDataSet(p, ds)
 	PlotModel(p, pm)
-	PlotSave(p, "dataset.png")
+	PlotSave(p, "dataset.svg")
 }

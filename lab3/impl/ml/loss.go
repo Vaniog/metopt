@@ -2,6 +2,8 @@ package ml
 
 type Loss interface {
 	F(yPred, y float64) float64
+
+	// Df is delta(F)/delta(Model.Predict) if Model.Predict=yPred, y is const
 	Df(yPred, y float64) float64
 }
 

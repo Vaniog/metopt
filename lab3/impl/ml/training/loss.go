@@ -21,8 +21,9 @@ func lossGrad(m ml.Model, ds DataSet) (*mat.VecDense, float64) {
 
 	for i := range ds.Len() {
 		r := ds.Row(i)
-		wGrad := mat.VecDenseCopyOf(m.DP(r.X))
+		wGrad := mat.VecDenseCopyOf(m.Dp(r.X))
 		errorTerm := m.Config().Loss.Df(m.Predict(r.X), r.Y)
+		// delta(Predict)/delta(Weights) * delta(F)/delta(Predict) = delta(F)/delta(Weights)
 		wGrad.ScaleVec(errorTerm, wGrad)
 		gradSum.AddVec(gradSum, wGrad)
 		if m.Config().Bias {

@@ -11,7 +11,9 @@ type Model interface {
 	SetWeights(mat.Vector)
 	Bias() float64
 	SetBias(float64)
-	DP(x mat.Vector) mat.Vector
+
+	// Dp is delta(Predict)/delta(Weights) if X is const
+	Dp(x mat.Vector) mat.Vector
 }
 
 type Config struct {

@@ -4,6 +4,8 @@ import "gonum.org/v1/gonum/mat"
 
 type Regularizator interface {
 	R(weights mat.Vector) float64
+
+	// Dr is delta(R)/delta(Model.Weights) if Model.Weights=weights
 	Dr(weights mat.Vector) mat.Vector
 }
 

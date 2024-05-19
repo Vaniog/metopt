@@ -82,7 +82,7 @@ func (pm *PolynomialModel) SetBias(b float64) {
 	pm.bias = b
 }
 
-func (pm *PolynomialModel) DP(x mat.Vector) mat.Vector {
+func (pm *PolynomialModel) Dp(x mat.Vector) mat.Vector {
 	dp := x
 	curX := mat.VecDenseCopyOf(x)
 	for i := 1; i < len(pm.ws); i++ {
