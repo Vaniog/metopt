@@ -12,6 +12,7 @@ message ModelConfig {
   string type = 1;
   string regularizator = 2;
   string loss = 3;
+  repeated double otherParams = 4;
 }
 
 message TrainerConfig {
@@ -37,6 +38,7 @@ message Model {
   string type = 1;
   repeated double weights = 2;
   double bias = 3;
+  int64 rowLen = 4;
 }
 
 message TrainResponse {

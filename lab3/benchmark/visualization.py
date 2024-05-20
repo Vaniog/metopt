@@ -5,7 +5,7 @@ import numpy as np
 import pandas
 import pandas as pd
 
-from lab3.benchmark.model import get_stub
+from lab3.benchmark.transport import get_stub
 from lab3.benchmark.transport.generated.api_pb2 import PredictRequest, DataSet, Row, TrainRequest, TrainerConfig, \
     ModelConfig
 
@@ -88,11 +88,13 @@ def _plot_ds(df: pandas.DataFrame):
     return ax
 
 
-def _plot_model(ax, xs: tp.Iterable[np.ndarray], model_id: str):
+def _plot_model(ax, xs: tp.Iterable[float], model_id: str):
     s = get_stub()
+    xs = np.linspace(min(xs), max(xs), 1000)
     r = s.predict(PredictRequest(modelId=model_id, data=DataSet(
-        rows=[Row(x=row) for row in xs]
+        rows=[Row(x=(row, )) for row in xs]
     )))
+    print(r.y)
 
     ax.plot(xs, r.y, color='orange')
 
@@ -110,19 +112,21 @@ def plot_dataset(file_path):
 def plot_model_over_dataset(file_path, model_id):
     df = pd.read_csv(file_path)
     ax = _plot_ds(df)
-    rows = df.loc[:, [df.columns[0]]].values
+    rows = df.loc[:, df.columns[0]].values
     _plot_model(ax, rows, model_id)
     ax.set_title("Model over dataset")
     plt.show()
 
 
 if __name__ == '__main__':
-    # generate("../impl/test-data/test_1dim.csv", GeneratorConfig(dim=1, rows=200, noize=2, functions=Functions.LINEAR))
+    # generate("../impl/test-data/test_1dim.csv", GeneratorConfig(dim=1, rows=1000, noize=2, functions=Functions.LINEAR))
     s = get_stub()
     r = s.train(TrainRequest(
-        path="./test-data/test_1dim.csv",
+        path="test_1dim.csv",
         trainerConfig=TrainerConfig(type="GreedyTrainer", params=[0.01, 100000, 0.001]),
-        modelConfig=ModelConfig(type="LinearModel", regularizator="EmptyRegularizator", loss="MSELoss"),
+        modelConfig=ModelConfig(type="PolynomialModel", regularizator="EmptyRegularizator", loss="MSELoss",
+                                otherParams=[5]),
     ))
     print(r)
     plot_model_over_dataset("../impl/test-data/test_1dim.csv", r.modelId)
+    # plot_model_over_dataset("../impl/test-data/test_1dim.csv", "20284196-2db3-4494-9623-127a58b497de")

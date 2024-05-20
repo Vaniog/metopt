@@ -1,14 +1,18 @@
 import dataclasses
+import os
 from collections import defaultdict
 from dataclasses import dataclass
 import typing as tp
 
+import pandas as pd
 from tabulate import tabulate
 from matplotlib import pyplot as plt
 import matplotlib.colors as mcolors
 from typing_extensions import overload
 
 from common.utils import *
+from lab3.benchmark.transport import get_stub
+from lab3.benchmark.transport.generated.api_pb2 import TrainResponse, TrainRequest, PredictRequest, DataSet, Row
 
 MAX_INT = 10 ** 9
 
@@ -40,6 +44,11 @@ class BenchmarkResult:
 
     def __init__(self, results: tp.List['ExperimentResult']):
         self.results = results
+
+    def all(self):
+        if len(self.results) == 0:
+            return None
+        return self.results[0].parameters()
 
     @classmethod
     def compare(cls, runnables: tp.Iterable[Runnable]):
@@ -114,6 +123,33 @@ class BenchmarkResult:
                 plt.legend()
 
         plt.show()
+
+
+def train_and_test(name: str, test_dataset_path: str, trainRequest: TrainRequest) -> ExperimentResult:
+    print(f"----{name}")
+    s = get_stub()
+    train_response: TrainResponse = s.train(trainRequest)
+    df = pd.read_csv(test_dataset_path)
+    xs = df.loc[:, df.columns[:-1]].values
+    real_values = df.loc[:, df.columns[-1]].values
+    predict_response = s.predict(PredictRequest(modelId=train_response.modelId, data=DataSet(
+        rows=[Row(x=row) for row in xs]
+    )))
+    accuracy = calc_accuracy(real_values, predict_response.y)
+    res = ExperimentResult(
+        name=name,
+        accuracy=accuracy,
+        memory=train_response.benchmark.mem,
+        time=train_response.benchmark.time / 1000 / 1000
+    )
+    return res
+
+
+def calc_accuracy(real_values, predicted_values):
+    score = 1
+    for predicted, real in zip(predicted_values, real_values):
+        score += (predicted - real) ** 2
+    return 1 / score
 
 
 if __name__ == '__main__':

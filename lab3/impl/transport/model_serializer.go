@@ -18,10 +18,19 @@ type ModelSerializer struct {
 	path string
 }
 
-func getModel(tp string, cfg ml.Config) ml.Model {
+func getModel(tp string, cfg ml.Config, otherParams ...float64) ml.Model {
 	switch tp {
 	case "LinearModel":
 		return ml.NewLinearModel(cfg)
+	case "PolynomialModel":
+		var deg int
+		if len(otherParams) > 0 {
+			deg = int(otherParams[0])
+		} else {
+			deg = 2
+		}
+		return ml.NewPolynomialModel(cfg, deg)
+
 	}
 	return nil
 }
@@ -70,6 +79,7 @@ func (s *ModelSerializer) Serialize(model ml.Model) (string, error) {
 		Weights: model.Weights().RawVector().Data,
 		Type:    getModelName(model),
 		Bias:    model.Bias(),
+		RowLen:  int64(model.Config().RowLen),
 	}
 	id := uuid.New()
 	serialized, err := json.Marshal(transportModel)
@@ -94,7 +104,7 @@ func (s *ModelSerializer) Deserialize(id string) (ml.Model, error) {
 	if err != nil {
 		return nil, err
 	}
-	model := getModel(transportModel.Type, ml.Config{RowLen: len(transportModel.Weights)})
+	model := getModel(transportModel.Type, ml.Config{RowLen: int(transportModel.RowLen)})
 	model.SetWeights(mat.NewVecDense(len(transportModel.Weights), transportModel.Weights))
 	model.SetBias(transportModel.Bias)
 	return model, nil

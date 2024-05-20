@@ -11,9 +11,11 @@ import (
 	"metopt/ml/training"
 	"metopt/transport/generated"
 	"net"
+	"path"
 )
 
 var ModelsFolder = "./models"
+var DataFolder = "./test-data"
 
 type MlServer struct {
 	generated.MlServer
@@ -23,7 +25,7 @@ var serializer = NewModelSerializer(ModelsFolder)
 
 func (s *MlServer) Train(ctx context.Context, r *generated.TrainRequest) (*generated.TrainResponse, error) {
 	log.Println("start training")
-	ds, err := training.NewSliceDatasetFromCSV(r.Path)
+	ds, err := training.NewSliceDatasetFromCSV(path.Join(DataFolder, r.Path))
 	if err != nil {
 		return nil, err
 	}
@@ -32,7 +34,7 @@ func (s *MlServer) Train(ctx context.Context, r *generated.TrainRequest) (*gener
 		RowLen: ds.Dim(),
 		Loss:   getLoss(r.ModelConfig.Loss),
 		Reg:    getRegularizator(r.ModelConfig.Regularizator),
-	})
+	}, r.ModelConfig.OtherParams...)
 	trainer := getTrainer(r.TrainerConfig)
 	_, err, ms := bencmark.Profile(func() (any, error) {
 		trainer.Train(m, ds)

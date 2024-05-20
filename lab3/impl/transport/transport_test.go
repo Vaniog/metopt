@@ -20,7 +20,7 @@ func TestModelSerializer_Serialize(t *testing.T) {
 }
 
 func TestModelSerializer_Deserialize(t *testing.T) {
-	id := "41affed5-c5fd-4ece-b8f0-e8f2104714aa"
+	id := "fd3c3abd-4d2a-4cdd-8825-78cc83195029"
 	s := NewModelSerializer("./models")
 	expected := ml.NewLinearModel(ml.Config{RowLen: 10})
 	expected.Weights().CopyVec(mat.NewVecDense(10, []float64{0, 0, 0, 0, 0, 0, 0, 0, 0, 0}))

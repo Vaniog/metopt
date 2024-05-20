@@ -16,14 +16,16 @@ class TrainRequest(_message.Message):
     def __init__(self, path: _Optional[str] = ..., trainerConfig: _Optional[_Union[TrainerConfig, _Mapping]] = ..., modelConfig: _Optional[_Union[ModelConfig, _Mapping]] = ...) -> None: ...
 
 class ModelConfig(_message.Message):
-    __slots__ = ("type", "regularizator", "loss")
+    __slots__ = ("type", "regularizator", "loss", "otherParams")
     TYPE_FIELD_NUMBER: _ClassVar[int]
     REGULARIZATOR_FIELD_NUMBER: _ClassVar[int]
     LOSS_FIELD_NUMBER: _ClassVar[int]
+    OTHERPARAMS_FIELD_NUMBER: _ClassVar[int]
     type: str
     regularizator: str
     loss: str
-    def __init__(self, type: _Optional[str] = ..., regularizator: _Optional[str] = ..., loss: _Optional[str] = ...) -> None: ...
+    otherParams: _containers.RepeatedScalarFieldContainer[float]
+    def __init__(self, type: _Optional[str] = ..., regularizator: _Optional[str] = ..., loss: _Optional[str] = ..., otherParams: _Optional[_Iterable[float]] = ...) -> None: ...
 
 class TrainerConfig(_message.Message):
     __slots__ = ("type", "params")
@@ -56,12 +58,14 @@ class Row(_message.Message):
     def __init__(self, x: _Optional[_Iterable[float]] = ..., y: _Optional[float] = ...) -> None: ...
 
 class Model(_message.Message):
-    __slots__ = ("type", "weights")
+    __slots__ = ("type", "weights", "bias")
     TYPE_FIELD_NUMBER: _ClassVar[int]
     WEIGHTS_FIELD_NUMBER: _ClassVar[int]
+    BIAS_FIELD_NUMBER: _ClassVar[int]
     type: str
     weights: _containers.RepeatedScalarFieldContainer[float]
-    def __init__(self, type: _Optional[str] = ..., weights: _Optional[_Iterable[float]] = ...) -> None: ...
+    bias: float
+    def __init__(self, type: _Optional[str] = ..., weights: _Optional[_Iterable[float]] = ..., bias: _Optional[float] = ...) -> None: ...
 
 class TrainResponse(_message.Message):
     __slots__ = ("modelId", "benchmark")
